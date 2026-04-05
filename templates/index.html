@@ -1,86 +1,65 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Concesionario | Inventario</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-</head>
-<body class="bg-light">
+{% extends "base.html" %}
 
-    <nav class="navbar navbar-dark bg-dark mb-4">
-        <div class="container">
-            <a class="navbar-brand" href="#"><i class="bi bi-car-front-fill me-2"></i>Concesionario Pro</a>
-        </div>
-    </nav>
+{% block title %}Inventario Actual | Concesionario{% endblock %}
 
-    <div class="container">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Inventario Actual</h2>
-            <a href="/nuevo" class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i> Añadir Vehículo</a>
-        </div>
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Inventario Actual</h2>
+    <a href="/nuevo" class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i> Añadir Vehículo</a>
+</div>
 
-        <div class="card shadow-sm">
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>ID</th>
-                                <th>Marca / Modelo</th>
-                                <th>VIN</th>
-                                <th>Año</th>
-                                <th>Motor</th>
-                                <th>Precio Venta</th>
-                                <th>Estado</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for v in vehiculos %}
-                            <tr>
-                                <td>{{ v.id_vehiculo }}</td>
-                                <td>
-                                    <strong>{{ v.marca }}</strong><br>
-                                    <small class="text-muted">{{ v.modelo }}</small>
-                                </td>
-                                <td><code>{{ v.vin }}</code></td>
-                                <td>{{ v.anio.year }}</td>
-                                <td>
-                                    <span class="badge rounded-pill bg-info text-dark">
-                                        {{ v.motor }}
-                                    </span>
-                                </td>
-                                <td>{{ "{:,.2f}".format(v.precio_venta) }} €</td>
-                                <td>
-                                    {% if v.estado == 'D' %}
-                                        <span class="badge bg-success">Disponible</span>
-                                    {% elif v.estado == 'V' %}
-                                        <span class="badge bg-danger">Vendido</span>
-                                    {% else %}
-                                        <span class="badge bg-warning text-dark">Taller</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></button>
-                                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-                                </td>
-                            </tr>
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Marca / Modelo</th>
+                        <th>VIN</th>
+                        <th>Año</th>
+                        <th>Motor</th>
+                        <th>Precio Venta</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for v in vehiculos %}
+                    <tr>
+                        <td>{{ v.id_vehiculo }}</td>
+                        <td>
+                            <strong>{{ v.marca }}</strong><br>
+                            <small class="text-muted">{{ v.modelo }}</small>
+                        </td>
+                        <td><code>{{ v.vin }}</code></td>
+                        <td>{{ v.anio.year }}</td>
+                        <td>
+                            <span class="badge rounded-pill bg-info text-dark">{{ v.motor }}</span>
+                        </td>
+                        <td>{{ "{:,.2f}".format(v.precio_venta) }} €</td>
+                        <td>
+                            {% if v.estado == 'D' %}
+                                <span class="badge bg-success">Disponible</span>
+                            {% elif v.estado == 'V' %}
+                                <span class="badge bg-danger">Vendido</span>
                             {% else %}
-                            <tr>
-                                <td colspan="8" class="text-center py-4 text-muted">
-                                    No hay vehículos registrados en el sistema.
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                                <span class="badge bg-warning text-dark">Taller</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-muted">No hay vehículos registrados.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+</div>
+{% endblock %}

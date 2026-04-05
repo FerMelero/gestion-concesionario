@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Nuevo Vehículo{% endblock %}
+
+{% block content %}
+<div class="card shadow p-4">
+    <h2 class="mb-4">Registrar Nuevo Vehículo</h2>
+    <form action="/vehiculos/nuevo" method="POST">
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Marca:</label>
+                <input type="text" name="marca" class="form-control" required>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Modelo:</label>
+                <input type="text" name="modelo" class="form-control" required>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Kilómetros:</label>
+                <input type="number" step="0.1" name="kilometros" class="form-control" required>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">VIN (17 caracteres):</label>
+                <input type="text" name="vin" class="form-control" maxlength="17" required>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Año fabricación:</label>
+                <input type="date" name="anio" class="form-control" required>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-3 mb-3">
+                <label class="form-label">Motor:</label>
+                <select name="motor" class="form-select" required>
+                    <option value="G">Gasolina (G)</option>
+                    <option value="D">Diésel (D)</option>
+                    <option value="HB">Híbrido (HB)</option>
+                    <option value="E">Eléctrico (E)</option>
+                </select>
+            </div>
+            <div class="col-md-3 mb-3">
+                <label class="form-label">Potencia (CV):</label>
+                <input type="number" name="potencia" class="form-control" required>
+            </div>
+            <div class="col-md-3 mb-3">
+                <label class="form-label">Precio Compra:</label>
+                <input type="number" step="0.01" name="pCompra" class="form-control" required>
+            </div>
+            <div class="col-md-3 mb-3">
+                <label class="form-label">Precio Venta:</label>
+                <input type="number" step="0.01" name="pVenta" class="form-control" required>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Estado:</label>
+                <select name="estado" class="form-select" required>
+                    <option value="D">Disponible</option>
+                    <option value="R">Reservado</option>
+                    <option value="V">Vendido</option>
+                </select>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Fecha Entrada:</label>
+                <input type="date" name="fEntrada" class="form-control" required>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-success w-100 mt-3">Guardar Vehículo</button>
+    </form>
+</div>
+{% endblock %}

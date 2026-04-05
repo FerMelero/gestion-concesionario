@@ -1,0 +1,25 @@
+/* Estilos personalizados para el concesionario */
+.navbar-brand {
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.card {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+code {
+    color: #d63384;
+    font-weight: 600;
+}
+
+.table th {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+}
+
+/* Transición suave para el hover */
+.table-hover tbody tr {
+    transition: background-color 0.2s ease;
+}
