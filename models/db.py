@@ -28,7 +28,7 @@ def insert_vehicle(marca, modelo, kilometros, vin, anio, motor, potencia, pCompr
             potencia=potencia,
             precio_compra= pCompra,
             precio_venta=pVenta,
-            estado="D",
+            estado=estado,
             fecha_entrada = fEntrada          
         )
 
