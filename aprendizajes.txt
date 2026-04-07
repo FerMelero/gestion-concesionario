@@ -1,0 +1,5 @@
+He aprendido que es mejor una sesión local para las consultas en vez de lanzar una global.
+He aprendido ha seleccionar por id con sqlalchemy.
+He aprendido que una sesión es una transaccion.
+
+He aprendido que el flujo para hacer una consulta (eliminación, inserción o simplemente consultar) es de abrir la session, usar TRY y poner lo que necesitemos, luego poner add y commit para añadirlo

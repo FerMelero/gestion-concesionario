@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Detalle: {{ vehiculo.marca }} {{ vehiculo.modelo }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{{ url_for('vehiculos.index') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Volver al inventario
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <h3 class="mb-0">{{ vehiculo.marca }} <span class="text-muted">{{ vehiculo.modelo }}</span></h3>
+                <span class="badge {% if vehiculo.estado == 'D' %}bg-success{% elif vehiculo.estado == 'V' %}bg-danger{% else %}bg-warning text-dark{% endif %} fs-6">
+                    {% if vehiculo.estado == 'D' %}Disponible{% elif vehiculo.estado == 'V' %}Vendido{% else %}En Taller{% endif %}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row text-center mb-4">
+                    <div class="col-4 border-end">
+                        <p class="text-muted mb-1">Año</p>
+                        <h5 class="fw-bold">{{ vehiculo.anio.year }}</h5>
+                    </div>
+                    <div class="col-4 border-end">
+                        <p class="text-muted mb-1">Kilometraje</p>
+                        <h5 class="fw-bold">{{ "{:,.0f}".format(vehiculo.kilometros) }} km</h5>
+                    </div>
+                    <div class="col-4">
+                        <p class="text-muted mb-1">Potencia</p>
+                        <h5 class="fw-bold">{{ vehiculo.potencia }} CV</h5>
+                    </div>
+                </div>
+
+                <h5 class="border-bottom pb-2">Especificaciones Técnicas</h5>
+                <table class="table table-striped mt-3">
+                    <tbody>
+                        <tr>
+                            <th scope="row" class="w-50">Número de Bastidor (VIN)</th>
+                            <td><code>{{ vehiculo.vin }}</code></td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Tipo de Motor</th>
+                            <td>
+                                {% if vehiculo.motor == 'G' %}Gasolina
+                                {% elif vehiculo.motor == 'D' %}Diésel
+                                {% elif vehiculo.motor == 'E' %}Eléctrico
+                                {% elif vehiculo.motor == 'HB' %}Híbrido
+                                {% else %}{{ vehiculo.motor }}{% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Fecha de Entrada en Stock</th>
+                            <td>{{ vehiculo.fecha_entrada.strftime('%d/%m/%Y') }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm border-primary mb-4">
+            <div class="card-body">
+                <h5 class="card-title text-muted">Precio de Venta</h5>
+                <h2 class="text-primary fw-bold">{{ "{:,.2f}".format(vehiculo.precio_venta) }} €</h2>
+                <hr>
+                <p class="small text-muted">Precio de compra (interno): {{ "{:,.2f}".format(vehiculo.precio_compra) }} €</p>
+                <p class="small text-success fw-bold">
+                    Margen estimado: {{ "{:,.2f}".format(vehiculo.precio_venta - vehiculo.precio_compra) }} €
+                </p>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="mb-3">Gestión</h5>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-warning">
+                        <i class="bi bi-pencil-square me-2"></i>Editar Datos
+                    </button>
+                    <button class="btn btn-outline-danger">
+                        <i class="bi bi-trash3 me-2"></i>Eliminar del Sistema
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

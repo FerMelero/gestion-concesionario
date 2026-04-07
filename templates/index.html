@@ -48,7 +48,9 @@
                             {% endif %}
                         </td>
                         <td>
-                            <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></button>
+                            <a href="{{ url_for('vehiculos.vehiculo_id', id=v.id) }}" class="btn btn-sm btn-outline-secondary">
+    <i class="bi bi-pencil"></i>
+</a>
                             <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
                         </td>
                     </tr>

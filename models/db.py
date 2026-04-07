@@ -6,7 +6,6 @@ from models.entities import Vehiculo
 
 engine = config.engine
 Session = sessionmaker(bind=engine)
-session = Session()
 
 def crear_tablas():
     print("Estableciendoconexión con Postgres")
@@ -14,9 +13,11 @@ def crear_tablas():
     print("Tablas creadas")
 
 def get_all_vehicles():
+    session = Session()
     return session.query(Vehiculo).all()
 
 def insert_vehicle(marca, modelo, kilometros, vin, anio, motor, potencia, pCompra, pVenta, estado, fEntrada):
+    session = Session()
     try:
         nuevo_vehiculo = Vehiculo(
             marca=marca,
@@ -42,7 +43,15 @@ def insert_vehicle(marca, modelo, kilometros, vin, anio, motor, potencia, pCompr
     finally:
         session.close()
 
-
+def vehicle_by_id(id):
+    session = Session()
+    try:
+        return session.query(Vehiculo).filter(Vehiculo.id == id).first()
+    except Exception as e:
+        session.rollback()
+        print("Error", e)
+    finally:
+        session.close()
 
 
 if __name__ == "__main__":

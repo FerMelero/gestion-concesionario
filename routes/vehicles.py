@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for
-from models.db import get_all_vehicles, insert_vehicle
+from models.db import get_all_vehicles, insert_vehicle, vehicle_by_id
 from datetime import datetime
 
 vehiculos_bp = Blueprint('vehiculos', __name__)
@@ -32,3 +32,10 @@ def new_vehicle():
         return redirect(url_for('vehiculos.index'))
     
     return render_template('newVehicle.html')
+
+
+@vehiculos_bp.route('/vehiculos/<int:id>')
+def vehiculo_id(id):
+    id_vehiculo = vehicle_by_id(id)
+
+    return render_template('vehicleId.html', vehiculo=id_vehiculo)
