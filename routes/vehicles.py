@@ -1,15 +1,17 @@
 from flask import Blueprint, render_template, request, redirect, url_for
-from models.db import get_all_vehicles, insert_vehicle, vehicle_by_id
+from models.db import get_all_vehicles, insert_vehicle, vehicle_by_id, delete_vehicle
 from datetime import datetime
 
 vehiculos_bp = Blueprint('vehiculos', __name__)
 
+# ruta por defecto, se ve una lista de los vehiculos disponibles
 @vehiculos_bp.route('/')
 def index():
     lista = get_all_vehicles()
     return render_template('index.html', vehiculos=lista)
 
 
+# ruta para añadir nuevos vehiculos, de momento solo rellenamos ciertas cosas
 @vehiculos_bp.route("/nuevo", methods=["GET", "POST"])
 def new_vehicle():
     if request.method == "POST":
@@ -33,7 +35,18 @@ def new_vehicle():
     
     return render_template('newVehicle.html')
 
+# eliminar un vehiculo dado un id (se accede con el boton de inicio)
+@vehiculos_bp.route('/vehiculos/eliminar/<int:id>', methods=["GET", "POST"])
+def eliminar_vehiculo(id):
+    vehiculo_objeto = vehicle_by_id(id)
+    if request.method == "POST":
+        delete_vehicle(vehiculo_objeto.id)
+        return redirect(url_for('vehiculos.index'))
+        
+    return render_template('deleteConfirm.html', vehiculo = vehiculo_objeto)
 
+
+# obtener la información relativa a un vehículo específico
 @vehiculos_bp.route('/vehiculos/<int:id>')
 def vehiculo_id(id):
     id_vehiculo = vehicle_by_id(id)

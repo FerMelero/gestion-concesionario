@@ -54,5 +54,25 @@ def vehicle_by_id(id):
         session.close()
 
 
+def delete_vehicle(id):
+    session = Session()
+    try:
+        vehiculo = session.query(Vehiculo).filter(Vehiculo.id == id).first()
+        if vehiculo:
+            session.delete(vehiculo)
+            session.commit()
+        
+        else: 
+            print(f"VEhiculo no encontado")
+    
+    except Exception as e:
+        session.rollback()
+        print("Error", e)
+
+    finally:
+        session.close()
+
+
+
 if __name__ == "__main__":
     crear_tablas()

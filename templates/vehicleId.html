@@ -75,18 +75,19 @@
         </div>
 
         <div class="card shadow-sm">
-            <div class="card-body">
-                <h5 class="mb-3">Gestión</h5>
-                <div class="d-grid gap-2">
-                    <button class="btn btn-warning">
-                        <i class="bi bi-pencil-square me-2"></i>Editar Datos
-                    </button>
-                    <button class="btn btn-outline-danger">
-                        <i class="bi bi-trash3 me-2"></i>Eliminar del Sistema
-                    </button>
-                </div>
-            </div>
+    <div class="card-body">
+        <h5 class="mb-3">Gestión</h5>
+        <div class="d-grid gap-2">
+            <a href="#" class="btn btn-warning">
+                <i class="bi bi-pencil-square me-2"></i>Editar Datos
+            </a>
+            
+            <a href="{{ url_for('vehiculos.eliminar_vehiculo', id=vehiculo.id) }}" class="btn btn-outline-danger">
+                <i class="bi bi-trash3 me-2"></i>Eliminar del Sistema
+            </a>
         </div>
+    </div>
+</div>
     </div>
 </div>
 {% endblock %}
