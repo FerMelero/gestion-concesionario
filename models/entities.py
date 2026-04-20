@@ -34,7 +34,7 @@ class Vehiculo(Base):
     
     @validates('motor')
     def validate_motor(self, key, value): # Nombre único para que no se pisen
-        motores = ["D", "G", "HB", "E", "HE"]
+        motores = ["D", "G", "HB", "E", "HE", "GNC"]
         if value not in motores:
             raise ValueError("Motor no válido")
         return value

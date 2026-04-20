@@ -72,6 +72,20 @@ def delete_vehicle(id):
     finally:
         session.close()
 
+def insert_masivo(lista_vehiculos):
+    session = Session()
+
+    try:
+        session.add_all(lista_vehiculos)
+        session.commit()
+    
+    except Exception as e:
+        session.rollback()
+        print("Error", e)
+
+    finally:
+        session.close()
+
 
 
 if __name__ == "__main__":
