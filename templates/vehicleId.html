@@ -20,17 +20,21 @@
             </div>
             <div class="card-body">
                 <div class="row text-center mb-4">
-                    <div class="col-4 border-end">
+                    <div class="col-3 border-end">
                         <p class="text-muted mb-1">Año</p>
                         <h5 class="fw-bold">{{ vehiculo.anio.year }}</h5>
                     </div>
-                    <div class="col-4 border-end">
+                    <div class="col-3 border-end">
                         <p class="text-muted mb-1">Kilometraje</p>
                         <h5 class="fw-bold">{{ "{:,.0f}".format(vehiculo.kilometros) }} km</h5>
                     </div>
-                    <div class="col-4">
+                    <div class="col-3 border-end">
                         <p class="text-muted mb-1">Potencia</p>
                         <h5 class="fw-bold">{{ vehiculo.potencia }} CV</h5>
+                    </div>
+                    <div class="col-3">
+                        <p class="text-muted mb-1">Consumo</p>
+                        <h5 class="fw-bold">{{ "{:,.1f}".format(vehiculo.consumo) }} <small class="fs-6">L/100</small></h5>
                     </div>
                 </div>
 
@@ -52,8 +56,24 @@
                             </td>
                         </tr>
                         <tr>
+                            <th scope="row">Cilindrada</th>
+                            <td>{{ vehiculo.cilindrada }} cc</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Transmisión</th>
+                            <td>{{ vehiculo.transmision if vehiculo.transmision else 'No especificada' }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Número de Marchas</th>
+                            <td>{{ vehiculo.marchas if vehiculo.marchas else '-' }}</td>
+                        </tr>
+                        <tr>
                             <th scope="row">Fecha de Entrada en Stock</th>
                             <td>{{ vehiculo.fecha_entrada.strftime('%d/%m/%Y') }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">ID de Registro</th>
+                            <td><span class="text-muted">#{{ vehiculo.id }}</span></td>
                         </tr>
                     </tbody>
                 </table>
@@ -75,19 +95,19 @@
         </div>
 
         <div class="card shadow-sm">
-    <div class="card-body">
-        <h5 class="mb-3">Gestión</h5>
-        <div class="d-grid gap-2">
-            <a href="#" class="btn btn-warning">
-                <i class="bi bi-pencil-square me-2"></i>Editar Datos
-            </a>
-            
-            <a href="{{ url_for('vehiculos.eliminar_vehiculo', id=vehiculo.id) }}" class="btn btn-outline-danger">
-                <i class="bi bi-trash3 me-2"></i>Eliminar del Sistema
-            </a>
+            <div class="card-body">
+                <h5 class="mb-3">Gestión</h5>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('vehiculos.modificar_vehiculo', id=vehiculo.id) }}" class="btn btn-warning">
+                        <i class="bi bi-pencil-square me-2"></i>Editar Datos
+                    </a>
+                    
+                    <a href="{{ url_for('vehiculos.eliminar_vehiculo', id=vehiculo.id) }}" class="btn btn-outline-danger">
+                        <i class="bi bi-trash3 me-2"></i>Eliminar del Sistema
+                    </a>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
     </div>
 </div>
 {% endblock %}

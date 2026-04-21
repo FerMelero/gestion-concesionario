@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for
-from models.db import get_all_vehicles, insert_vehicle, vehicle_by_id, delete_vehicle
+from models.db import get_all_vehicles, insert_vehicle, vehicle_by_id, delete_vehicle, mod_vehiculo
 from datetime import datetime
 
 vehiculos_bp = Blueprint('vehiculos', __name__)
@@ -52,3 +52,30 @@ def vehiculo_id(id):
     id_vehiculo = vehicle_by_id(id)
 
     return render_template('vehicleId.html', vehiculo=id_vehiculo)
+
+@vehiculos_bp.route('/vehiculos/modificar/<int:id>', methods=["GET", "POST"])
+def modificar_vehiculo(id):
+    vehiculo_objeto = vehicle_by_id(id)
+    if request.method == "POST":
+        registro = {
+        "marca" : request.form["marca"],
+        "modelo" :request.form["modelo"],
+        "kilometros" : float(request.form["kilometros"]),
+        
+        "anio" : datetime.strptime(request.form["anio"], '%Y-%m-%d'),
+        "fecha_entrada" : datetime.strptime(request.form["fEntrada"], '%Y-%m-%d'),
+        
+        "motor" : request.form["motor"],
+        "cilindrada" : request.form["cilindrada"],
+        "consumo": float(request.form["consumo"]),
+        "potencia" : int(request.form["potencia"]),
+        "transmision" : request.form["transmision"],
+        "marchas" : request.form["marchas"],
+        "precio_compra" : float(request.form["pCompra"]),
+        "precio_venta" : float(request.form["pVenta"]),
+        "estado" : request.form["estado"]
+        }
+        mod_vehiculo(id, registro)
+        return redirect(url_for('vehiculos.vehiculo_id', id=id))
+
+    return render_template('modifyVehicle.html', vehiculo=vehiculo_objeto)

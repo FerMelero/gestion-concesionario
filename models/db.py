@@ -86,7 +86,27 @@ def insert_masivo(lista_vehiculos):
     finally:
         session.close()
 
+def cambiar_cc_electricos():
+    session = Session()
+    try:
+        session.query(Vehiculo).filter(Vehiculo.motor == "E").update({"cilindrada" : 0})
+        session.commit() 
+    except Exception as e:
+        session.rollback()
+        print("Error", e)
+    finally:
+        session.close()
 
-
+def mod_vehiculo(id, datos_nuevos):
+    session = Session()
+    try:
+        session.query(Vehiculo).filter(Vehiculo.id == id).update(datos_nuevos)
+        session.commit() 
+    except Exception as e:
+        session.rollback()
+        print("Error", e)
+    finally:
+        session.close()
+    session = Session()
 if __name__ == "__main__":
-    crear_tablas()
+    cambiar_cc_electricos()

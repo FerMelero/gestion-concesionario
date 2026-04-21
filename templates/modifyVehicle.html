@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Editar: {{ vehiculo.marca }} {{ vehiculo.modelo }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-pencil-square"></i> Editar Vehículo <small class="text-muted">#{{ vehiculo.id }}</small></h2>
+        <a href="{{ url_for('vehiculos.vehiculo_id', id=vehiculo.id) }}" class="btn btn-outline-secondary">
+            Cancelar y volver
+        </a>
+    </div>
+
+    <form action="{{ url_for('vehiculos.modificar_vehiculo', id=vehiculo.id) }}" method="POST" class="card shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title border-bottom pb-2 mb-3 text-primary">Información Básica</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Marca</label>
+                    <input type="text" name="marca" class="form-control" value="{{ vehiculo.marca }}" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Modelo</label>
+                    <input type="text" name="modelo" class="form-control" value="{{ vehiculo.modelo }}" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">VIN (Número de Bastidor)</label>
+                    <input type="text" class="form-control bg-light" value="{{ vehiculo.vin }}" readonly>
+                    <div class="form-text">El VIN no se puede modificar (es único).</div>
+                </div>
+            </div>
+
+            <h5 class="card-title border-bottom pb-2 mb-3 text-primary">Especificaciones Técnicas</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Kilómetros</label>
+                    <input type="number" step="0.1" name="kilometros" class="form-control" value="{{ vehiculo.kilometros }}" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Año de Fabricación</label>
+                    <input type="date" name="anio" class="form-control" 
+                           value="{{ vehiculo.anio.strftime('%Y-%m-%d') }}" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Fecha de entrada</label>
+                    <input type="date" name="fEntrada" class="form-control" 
+                           value="{{ vehiculo.fecha_entrada.strftime('%Y-%m-%d') }}" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Potencia (CV)</label>
+                    <input type="number" name="potencia" class="form-control" value="{{ vehiculo.potencia }}" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Cilindrada (cc)</label>
+                    <input type="number" name="cilindrada" class="form-control" value="{{ vehiculo.cilindrada }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Consumo (L/100km)</label>
+                    <input type="number" step="0.01" name="consumo" class="form-control" value="{{ vehiculo.consumo }}" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Transmisión</label>
+                    <input type="text" name="transmision" class="form-control" value="{{ vehiculo.transmision }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Marchas</label>
+                    <input type="number" name="marchas" class="form-control" value="{{ vehiculo.marchas }}">
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label fw-bold">Tipo de Motor</label>
+                    <select name="motor" class="form-select">
+                        <option value="G" {% if vehiculo.motor == 'G' %}selected{% endif %}>Gasolina (G)</option>
+                        <option value="D" {% if vehiculo.motor == 'D' %}selected{% endif %}>Diésel (D)</option>
+                        <option value="E" {% if vehiculo.motor == 'E' %}selected{% endif %}>Eléctrico (E)</option>
+                        <option value="HB" {% if vehiculo.motor == 'HB' %}selected{% endif %}>Híbrido (HB)</option>
+                    </select>
+                </div>
+            </div>
+
+            <h5 class="card-title border-bottom pb-2 mb-3 text-primary">Precios y Logística</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold text-danger">Precio Compra (€)</label>
+                    <input type="number" step="0.01" name="pCompra" class="form-control border-danger" value="{{ vehiculo.precio_compra }}" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold text-success">Precio Venta (€)</label>
+                    <input type="number" step="0.01" name="pVenta" class="form-control border-success" value="{{ vehiculo.precio_venta }}" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Estado Actual</label>
+                    <select name="estado" class="form-select border-primary">
+                        <option value="D" {% if vehiculo.estado == 'D' %}selected{% endif %}>Disponible (D)</option>
+                        <option value="R" {% if vehiculo.estado == 'R' %}selected{% endif %}>Reservado / Taller (R)</option>
+                        <option value="V" {% if vehiculo.estado == 'V' %}selected{% endif %}>Vendido (V)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer bg-light d-flex justify-content-end py-3">
+            <button type="submit" class="btn btn-primary btn-lg px-5">
+                <i class="bi bi-save me-2"></i>Guardar Cambios
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
