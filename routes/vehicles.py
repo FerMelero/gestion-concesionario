@@ -7,8 +7,10 @@ vehiculos_bp = Blueprint('vehiculos', __name__)
 # ruta por defecto, se ve una lista de los vehiculos disponibles
 @vehiculos_bp.route('/')
 def index():
-    lista = get_all_vehicles()
-    return render_template('index.html', vehiculos=lista)
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    data = get_all_vehicles(page, per_page)
+    return render_template('index.html', vehiculos=data['items'], pagination=data)
 
 
 # ruta para añadir nuevos vehiculos, de momento solo rellenamos ciertas cosas
@@ -28,8 +30,12 @@ def new_vehicle():
         p_compra = float(request.form["pCompra"])
         p_venta = float(request.form["pVenta"])
         estado = request.form["estado"]
+        cilindrada = request.form["cilindrada"]
+        consumo = request.form["consumo"]
+        marchas = int(request.form["marchas"])
+        transmision = request.form["transmision"]
 
-        insert_vehicle(marca, modelo, kilometros, vin, anio, motor, potencia, p_compra, p_venta, estado, f_entrada)
+        insert_vehicle(marca, modelo, kilometros, vin, anio, motor, potencia, p_compra, p_venta, estado, f_entrada, cilindrada, consumo, marchas, transmision)
 
         return redirect(url_for('vehiculos.index'))
     
