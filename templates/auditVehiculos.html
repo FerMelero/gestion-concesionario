@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Auditoría de Cambios | Concesionario{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-shield-check me-2"></i>Registro de Auditoría</h2>
+    <div class="text-muted">
+        <small>Mostrando últimos cambios en la flota</small>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Operación</th>
+                        <th>Fecha y Hora</th>
+                        <th>Usuario</th>
+                        <th>ID Veh.</th>
+                        <th>Vehículo</th>
+                        <th>VIN</th>
+                        <th>Detalles Técnicos</th>
+                        <th>Precios (C/V)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in auditoria %}
+                    <tr>
+                        <td>
+                            {% if log.operacion == 'I' %}
+                                <span class="badge bg-success w-100"><i class="bi bi-plus-lg"></i> INSERT</span>
+                            {% elif log.operacion == 'U' %}
+                                <span class="badge bg-primary w-100"><i class="bi bi-pencil-square"></i> UPDATE</span>
+                            {% elif log.operacion == 'D' %}
+                                <span class="badge bg-danger w-100"><i class="bi bi-trash"></i> DELETE</span>
+                            {% endif %}
+                        </td>
+                        <td class="small">
+                            {{ log.stamp.strftime('%d/%m/%Y') }}<br>
+                            <span class="text-muted">{{ log.stamp.strftime('%H:%M:%S') }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border"><i class="bi bi-person"></i> {{ log.user_id }}</span>
+                        </td>
+                        <td><strong>#{{ log.id_vehiculo }}</strong></td>
+                        <td>
+                            <div class="fw-bold">{{ log.marca }} {{ log.modelo }}</div>
+                            <small class="text-muted">{{ log.motor }} | {{ log.potencia }} CV</small>
+                        </td>
+                        <td><code class="small text-primary">{{ log.vin }}</code></td>
+                        <td>
+                            <div style="font-size: 0.85rem;">
+                                <span><i class="bi bi-speedometer2"></i> {{ log.kilometros }} km</span><br>
+                                <span><i class="bi bi-gear"></i> {{ log.transmision }} ({{ log.marchas }}v)</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="small text-danger">C: {{ "{:,.2f}".format(log.precio_compra) }}€</div>
+                            <div class="small text-success font-weight-bold">V: {{ "{:,.2f}".format(log.precio_venta) }}€</div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <i class="bi bi-info-circle fs-2"></i><br>
+                            No hay registros de auditoría disponibles.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}

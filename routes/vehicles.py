@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for
-from models.db import get_all_vehicles, insert_vehicle, vehicle_by_id, delete_vehicle, mod_vehiculo
+from models.db import get_all_vehicles, insert_vehicle, vehicle_by_id, delete_vehicle, mod_vehiculo, informacion_audit
 from datetime import datetime
 
 vehiculos_bp = Blueprint('vehiculos', __name__)
@@ -85,3 +85,8 @@ def modificar_vehiculo(id):
         return redirect(url_for('vehiculos.vehiculo_id', id=id))
 
     return render_template('modifyVehicle.html', vehiculo=vehiculo_objeto)
+
+@vehiculos_bp.route('/vehiculos/auditoria')
+def auditoria_vehiculos():
+    aud = informacion_audit()
+    return render_template('auditVehiculos.html', auditoria=aud)

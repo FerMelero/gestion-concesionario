@@ -2,7 +2,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import text
 import config
 from models.entities import Base
-from models.entities import Vehiculo
+from models.entities import Vehiculo, AuditVehiculo
 from flask import request
 # en este archivo es en el que se crean enn el servidor postgres
 
@@ -212,5 +212,12 @@ def crear_audits():
             conn.execute(text(cmd))
         conn.commit()
         print("Triggers y tablas de auditoría creados correctamente.")
+
+def informacion_audit():
+    session = Session()
+    audit = session.query(AuditVehiculo).all()
+    return audit
+
+
 if __name__ == "__main__":
-    crear_tablas()
+    informacion_audit()

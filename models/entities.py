@@ -84,3 +84,33 @@ class VehiculoEquipamiento(Base):
     
     vehiculo = relationship("Vehiculo", back_populates="lista_equipamiento")
     atributo = relationship("Atributo", back_populates="vehiculos")
+
+class AuditVehiculo(Base):
+    __tablename__ = "audit_vehiculo"
+    
+    # En las tablas de auditoría no suele haber una PK real de negocio, 
+    # pero SQLAlchemy necesita una para mapear la clase. 
+    # Usamos stamp + vin o creamos un id artificial si fuera necesario.
+    # Como la tabla de auditoría ya existe en SQL, la mapeamos tal cual:
+    
+    stamp = Column(DateTime, primary_key=True, default=datetime.now)
+    operacion = Column(String(1), nullable=False)
+    user_id = Column(String(100), nullable=False)
+    
+    # Campos del vehículo (mapeados de la tabla audit)
+    id_vehiculo = Column(Integer, primary_key=True) # Parte de la PK compuesta para SQLA
+    marca = Column(String(30))
+    modelo = Column(String(80))
+    kilometros = Column(Float)
+    vin = Column(String(17))
+    anio = Column(DateTime)
+    motor = Column(String(3))
+    cilindrada = Column(Integer)
+    consumo = Column(Float)
+    marchas = Column(Integer)
+    transmision = Column(String(12))
+    precio_compra = Column(Float)
+    precio_venta = Column(Float)
+    fecha_entrada = Column(DateTime)
+    estado = Column(String(1))
+    potencia = Column(Integer)
