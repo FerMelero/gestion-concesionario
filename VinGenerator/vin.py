@@ -1,4 +1,7 @@
 import random
+import os
+
+
 
 vinDigitPositionMultiplier = [ 8, 7, 6, 5, 4, 3, 2, 10, 0, 9, 8, 7, 6, 5, 4, 3, 2 ]
 vinDigitValues = { 'A':1, 'B':2, 'C':3, 'D':4, 'E':5, 'F':6, 'G':7, 'H':8, 'J':1,
@@ -56,7 +59,8 @@ def getRandomVinChar():
 def getRandomVinStart():
     #137DA903       T
     #137FA833       3
-    vinFile = open("VinPrefixes.txt")
+    ruta = os.path.join(os.path.dirname(__file__), "VinPrefixes.txt")
+    vinFile = open(ruta)
     count = 0
 
     # Get random Manufaturer and Model
