@@ -1,58 +1,51 @@
-# 🚗 Gestión de Concesionario
+# Gestión de Concesionario
 
-Aplicación web para gestionar el inventario de un concesionario de vehículos de ocasión: alta, consulta, modificación y baja de coches, con un **historial de auditoría automático** de todos los cambios.
+Aplicación web para gestionar el inventario de un concesionario de coches de ocasión. Permite dar de alta, consultar, modificar y borrar vehículos, y guarda un historial de auditoría de todos los cambios.
 
-Proyecto personal hecho con **Flask**, **SQLAlchemy** y **PostgreSQL**.
+Es un proyecto personal para practicar con Flask, SQLAlchemy y PostgreSQL.
 
-[![CI](https://github.com/FerMelero/gestion-concesionario/actions/workflows/ci.yml/badge.svg)](https://github.com/FerMelero/gestion-concesionario/actions/workflows/ci.yml)
+## Qué hace
 
----
+- Listado de vehículos paginado (20 por página).
+- Búsqueda por marca, modelo o VIN, filtros por estado, tipo de motor, rango de precio y kilómetros máximos, y ordenación por varios campos. Los filtros se mantienen al cambiar de página.
+- Ficha de detalle de cada vehículo.
+- Alta, modificación y baja de vehículos. La baja pide confirmación.
+- Mensajes al usuario cuando algo falla (VIN duplicado, campo inválido, número mal escrito). El formulario conserva lo que se había escrito.
+- Auditoría automática: un trigger de PostgreSQL guarda cada `INSERT`, `UPDATE` y `DELETE` sobre la tabla de vehículos. Se consulta en `/vehiculos/auditoria`.
+- Validación en el modelo: año entre 1900 y 2100, y tipo de motor y estado restringidos a valores válidos.
+- Importación masiva de unos 7.000 vehículos desde un CSV, generando VINs válidos con dígito de control.
+- Páginas de error 404 y 500 personalizadas.
 
-## ✨ Funcionalidades
-
-- **Listado paginado** de vehículos (20 por página) en la página principal.
-- **Ficha de detalle** de cada vehículo.
-- **Alta, modificación y baja** de vehículos (la baja pide confirmación).
-- **Auditoría automática**: un trigger de PostgreSQL registra cada `INSERT`, `UPDATE` y `DELETE` sobre la tabla de vehículos (quién, cuándo y qué datos), y se consulta desde `/vehiculos/auditoria`.
-- **Validación en el modelo**: año entre 1900 y 2100, tipo de motor y estado de venta restringidos a valores válidos.
-- **Importación masiva** de ~7.000 vehículos desde un CSV (`used_cars_data.csv`), generando VINs válidos con dígito de control.
-- **Páginas de error** 404 y 500 personalizadas.
-- **Integración continua** con GitHub Actions (ejecuta los tests en cada push y pull request).
-
-## 🛠️ Tecnologías
+## Tecnologías
 
 | Capa | Herramienta |
 |---|---|
 | Backend | Python 3.12, Flask 3 |
 | Base de datos | PostgreSQL, SQLAlchemy 2, psycopg2 |
 | Datos | pandas (importación del CSV) |
-| Frontend | Plantillas Jinja2 + CSS propio |
-| Tests / CI | pytest, GitHub Actions |
+| Frontend | Plantillas Jinja2, Bootstrap 5 y CSS propio |
 
-## 📋 Requisitos previos
+## Requisitos
 
 - Python 3.12 o superior
-- Un servidor PostgreSQL accesible, con una base de datos vacía creada para el proyecto
+- Un servidor PostgreSQL con una base de datos vacía para el proyecto
 - Git
 
-## 🚀 Instalación
+## Instalación
 
 ```bash
-# 1. Clonar el repositorio
 git clone https://github.com/FerMelero/gestion-concesionario.git
 cd gestion-concesionario
 
-# 2. Crear y activar un entorno virtual
 python -m venv venv
 source venv/bin/activate        # En Windows: venv\Scripts\activate
 
-# 3. Instalar las dependencias
 pip install -r requirements.txt
 ```
 
 ### Configuración (`.env`)
 
-Crea un archivo `.env` en la raíz del proyecto (está en `.gitignore`, no se sube al repositorio):
+Hay que crear un archivo `.env` en la raíz del proyecto. Está en `.gitignore`, así que no se sube al repositorio.
 
 ```env
 user=mi_usuario
@@ -61,107 +54,109 @@ host=localhost
 port=5432
 dbname=concesionario
 VIN_GENERATOR_PATH=/ruta/absoluta/a/gestion-concesionario/VinGenerator
+SECRET_KEY=una_cadena_larga_y_aleatoria
 ```
 
 | Variable | Descripción |
 |---|---|
 | `user`, `password` | Credenciales de PostgreSQL |
-| `host`, `port` | Dirección del servidor (por defecto `localhost` y `5432`) |
+| `host`, `port` | Dirección del servidor |
 | `dbname` | Nombre de la base de datos |
-| `VIN_GENERATOR_PATH` | Ruta **absoluta** a la carpeta `VinGenerator` de este repo; la usa la importación del CSV para generar VINs |
+| `VIN_GENERATOR_PATH` | Ruta absoluta a la carpeta `VinGenerator` de este repo. La usa la importación del CSV para generar los VIN |
+| `SECRET_KEY` | Clave de Flask para los mensajes al usuario. Si no se define, se usa una de desarrollo, que no sirve para producción |
 
 ### Preparar la base de datos
 
-Ejecuta estos comandos **desde la raíz del proyecto y en este orden**:
+Desde la raíz del proyecto y en este orden:
 
 ```bash
-# 1. Crear las tablas e importar el CSV con los vehículos
-#    ⚠️ Borra y recrea todas las tablas (drop_all). Úsalo solo en una BD de desarrollo.
+# 1. Crear las tablas e importar el CSV
+#    Ojo: borra y recrea todas las tablas (drop_all). Solo para bases de datos de desarrollo.
 python dataset.py
 
 # 2. Crear la tabla de auditoría y el trigger
 python -c "from models.db import crear_audits; crear_audits()"
 ```
 
-> El trigger se crea **después** de la importación a propósito: así los ~7.000 vehículos importados no llenan el historial de auditoría con inserciones masivas.
+El trigger se crea después de la importación a propósito. Así los 7.000 vehículos importados no llenan el historial de auditoría con inserciones masivas.
 
-Si prefieres empezar con un único coche de prueba en lugar del CSV:
+Si se prefiere empezar con un solo coche de prueba en vez del CSV:
 
 ```bash
 python -c "from models.db import crear_tablas, crear_audits; crear_tablas(); crear_audits()"
 python -m models.insert_demo_data
 ```
 
-## ▶️ Ejecutar la aplicación
+## Ejecutar la aplicación
 
 ```bash
 flask --app app run --debug
 ```
 
-Abre <http://127.0.0.1:5000> en el navegador.
+Después abrir <http://127.0.0.1:5000> en el navegador.
 
-## 🗺️ Rutas principales
+## Rutas
 
 | Ruta | Método | Descripción |
 |---|---|---|
-| `/` | GET | Listado paginado (`?page=2`) |
-| `/nuevo` | GET, POST | Formulario de alta de vehículo |
+| `/` | GET | Listado. Admite `page`, `q`, `estado`, `motor`, `precio_min`, `precio_max`, `km_max`, `orden` y `direccion` |
+| `/nuevo` | GET, POST | Alta de vehículo |
 | `/vehiculos/<id>` | GET | Ficha del vehículo |
 | `/vehiculos/modificar/<id>` | GET, POST | Edición del vehículo |
 | `/vehiculos/eliminar/<id>` | GET, POST | Confirmación y borrado |
-| `/vehiculos/auditoria` | GET | Historial de cambios |
+| `/vehiculos/auditoria` | GET | Últimos 200 cambios registrados |
 
-## 🧪 Tests
+Ejemplo: `/?q=audi&estado=D&precio_max=15000&orden=precio&direccion=desc` lista los Audi disponibles de menos de 15.000 €, del más caro al más barato.
 
-```bash
-python -m pytest
-```
+## Tests
 
-Actualmente los tests cubren el generador de VIN (cálculo del dígito de control y formato del VIN generado). Los mismos tests se ejecutan automáticamente en GitHub Actions.
+Todavía no hay tests propios del proyecto. El archivo `VinGenerator/tests.py` es del generador original y está escrito para Python 2, así que no funciona tal cual.
 
-## 📁 Estructura del proyecto
+## Estructura
 
 ```
 gestion-concesionario/
 ├── app.py                  # Factory de la aplicación Flask y manejadores de error
 ├── config.py               # Carga del .env y creación del engine de SQLAlchemy
 ├── dataset.py              # Importación masiva del CSV a la base de datos
-├── used_cars_data.csv      # Dataset de origen (coches de ocasión)
+├── used_cars_data.csv      # Dataset de origen
 ├── models/
-│   ├── entities.py         # Modelos SQLAlchemy (Vehiculo, DetalleElectrico, AuditVehiculo...)
-│   ├── db.py               # Consultas, CRUD y creación de triggers de auditoría
+│   ├── entities.py         # Modelos SQLAlchemy y catálogos de motores y estados
+│   ├── db.py               # Consultas, filtros, CRUD y creación del trigger de auditoría
 │   └── insert_demo_data.py # Inserta un vehículo de prueba
 ├── routes/
-│   └── vehicles.py         # Blueprint con las rutas de vehículos
-├── templates/              # Plantillas Jinja2 (+ errors/404 y 500)
+│   └── vehicles.py         # Rutas de vehículos y lectura de formularios
+├── templates/              # Plantillas Jinja2 (y errors/ con el 404 y el 500)
 ├── static/css/             # Estilos
 ├── utils/
 │   └── vin_helper.py       # Puente hacia el generador de VIN
-├── VinGenerator/           # Generador de VIN válidos (ver créditos)
-├── tests/                  # Tests con pytest
-└── .github/workflows/      # Pipeline de CI
+└── VinGenerator/           # Generador de VIN válidos (ver créditos)
 ```
 
-## 🗃️ Modelo de datos
+## Modelo de datos
 
-- **`vehiculo`**: marca, modelo, kilómetros, VIN (único), año, motor (`D` diésel, `G` gasolina, `HB` híbrido, `E` eléctrico, `HE` híbrido enchufable, `GNC`), cilindrada, consumo, marchas, transmisión, precios de compra y venta, fecha de entrada, estado (`D` disponible, `R` reservado, `V` vendido) y potencia.
-- **`detalle_electrico`**: datos de batería y carga para eléctricos (relación 1:1 con vehículo).
-- **`atributo`** y **`vehiculo_equipamiento`**: catálogo de extras y tabla puente para el equipamiento variable de cada coche.
-- **`audit_vehiculo`**: historial de operaciones, rellenado por el trigger `tr_audit_vehiculo`.
+- `vehiculo`: marca, modelo, kilómetros, VIN (único), año, motor, cilindrada, consumo, marchas, transmisión, precios de compra y venta, fecha de entrada, estado y potencia.
+  - Motor: `G` gasolina, `D` diésel, `HB` híbrido, `HE` híbrido enchufable, `E` eléctrico, `GNC` gas natural.
+  - Estado: `D` disponible, `R` reservado, `T` en taller, `V` vendido.
+- `detalle_electrico`: batería y carga de los eléctricos (relación 1:1 con vehículo). Todavía no se usa desde la interfaz.
+- `atributo` y `vehiculo_equipamiento`: catálogo de extras y tabla puente con el equipamiento de cada coche. Tampoco se usan todavía.
+- `audit_vehiculo`: historial de operaciones, rellenado por el trigger `tr_audit_vehiculo`.
 
-## 🔮 Próximos pasos
+## Pendiente
 
+- [ ] CI/CD con GitHub Actions (ejecutar los tests en cada push y pull request)
+- [ ] Tests de las rutas y de las validaciones del modelo, y portar los del generador de VIN a Python 3
 - [ ] Autenticación de usuarios y protección CSRF
-- [ ] Manejo de errores y mensajes al usuario en los formularios
-- [ ] Más tests (rutas y validaciones del modelo)
-- [ ] Gestión desde la interfaz de los datos de vehículos eléctricos y del equipamiento
-- [ ] Filtros y búsqueda en el listado
+- [ ] Que la auditoría guarde el usuario de la aplicación y no el de PostgreSQL
+- [ ] Paginación y filtros en la página de auditoría
+- [ ] Gestionar desde la interfaz los datos de los eléctricos y el equipamiento
+- [ ] Limpiar los precios vacíos (NaN) que trae el CSV importado
 
-## 🙏 Créditos
+## Créditos
 
-- El generador de VIN de la carpeta [`VinGenerator/`](VinGenerator/) conserva su propia licencia ([LICENSE](VinGenerator/LICENSE)).
-- Dataset de coches de ocasión (`used_cars_data.csv`) de origen público.
+- El generador de VIN de [`VinGenerator/`](VinGenerator/) conserva su propia licencia ([LICENSE](VinGenerator/LICENSE)).
+- El dataset de coches de ocasión (`used_cars_data.csv`) es de origen público.
 
-## 👤 Autor
+## Autor
 
-**Fernando Melero** — [@FerMelero](https://github.com/FerMelero)
+Fernando Melero ([@FerMelero](https://github.com/FerMelero))
