@@ -79,11 +79,18 @@
             <div class="card-body">
                 <h5 class="card-title text-muted">Precio de Venta</h5>
                 <h2 class="text-primary fw-bold mb-0">{{ "{:,.2f}".format(vehiculo.precio_venta) }} €</h2>
+                {% if vehiculo.estado == 'V' and vehiculo.precio_final is not none %}
+                <p class="small mb-1">Vendido por <strong>{{ "{:,.2f}".format(vehiculo.precio_final) }} €</strong>
+                    {% if vehiculo.fecha_venta %}el {{ vehiculo.fecha_venta.strftime('%d/%m/%Y') }}{% endif %}</p>
+                {% endif %}
+                {% if puede('costes.ver') %}
                 <hr>
                 <p class="small text-muted">Precio de compra (interno): {{ "{:,.2f}".format(vehiculo.precio_compra) }} €</p>
                 <p class="small text-success fw-bold">
-                    Margen estimado: {{ "{:,.2f}".format(vehiculo.precio_venta - vehiculo.precio_compra) }} €
+                    Margen {{ 'real' if vehiculo.estado == 'V' and vehiculo.precio_final is not none else 'estimado' }}:
+                    {{ "{:,.2f}".format((vehiculo.precio_final if vehiculo.estado == 'V' and vehiculo.precio_final is not none else vehiculo.precio_venta) - vehiculo.precio_compra) }} €
                 </p>
+                {% endif %}
             </div>
         </div>
 
@@ -91,13 +98,17 @@
             <div class="card-body">
                 <h5 class="mb-3">Gestión</h5>
                 <div class="d-grid gap-2">
+                    {% if puede('vehiculos.editar') %}
                     <a href="{{ url_for('vehiculos.modificar_vehiculo', id=vehiculo.id) }}" class="btn btn-warning">
                         <i class="bi bi-pencil-square me-2"></i>Editar Datos
                     </a>
+                    {% endif %}
                     
+                    {% if puede('vehiculos.eliminar') %}
                     <a href="{{ url_for('vehiculos.eliminar_vehiculo', id=vehiculo.id) }}" class="btn btn-outline-danger">
                         <i class="bi bi-trash3 me-2"></i>Eliminar del Sistema
                     </a>
+                    {% endif %}
                 </div>
             </div>
         </div>

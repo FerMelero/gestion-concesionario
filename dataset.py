@@ -7,8 +7,13 @@ from models.db import Session, insert_masivo, engine
 from models.entities import Vehiculo, Base
 
 datos_insertar = []
+# tablas de usuarios y accesos: la importación no debe borrarlas
+PROTEGIDAS = {"usuario", "usuario_permiso", "audit_usuario", "registro_acceso"}
+
+
 def procesar_csv():
-    Base.metadata.drop_all(engine)
+    tablas = [t for t in Base.metadata.sorted_tables if t.name not in PROTEGIDAS]
+    Base.metadata.drop_all(engine, tables=tablas)
     Base.metadata.create_all(engine)
     data = pd.read_csv('used_cars_data.csv')
     print("CSV cargadp, empezando importación")

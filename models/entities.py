@@ -1,5 +1,7 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, Float, DateTime
+from sqlalchemy import Column, Integer, BigInteger, String, ForeignKey, Boolean, Float, DateTime
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship, declarative_base, validates # validates añadido
+from flask_login import UserMixin
 from datetime import datetime
 
 Base = declarative_base()
@@ -13,6 +15,20 @@ MOTORES = {
     "E": "Eléctrico",
     "GNC": "Gas natural (GNC)",
 }
+# Permisos que el admin puede conceder a un empleado. "Ver vehículos" es la base de
+# cualquier empleado y no se asigna; la gestión de usuarios es exclusiva del rol admin.
+PERMISOS = {
+    "vehiculos.crear": "Dar de alta vehículos",
+    "vehiculos.editar": "Modificar vehículos",
+    "vehiculos.eliminar": "Eliminar vehículos",
+    "costes.ver": "Ver precio de compra y margen",
+    "resumen.ver": "Ver el resumen económico",
+    "auditoria.ver": "Ver el registro de auditoría de vehículos",
+}
+# Permisos con los que nace un empleado nuevo (el admin los puede quitar)
+PERMISOS_EMPLEADO_POR_DEFECTO = ["vehiculos.crear", "vehiculos.editar", "vehiculos.eliminar"]
+ROLES = {"admin": "Administrador", "empleado": "Empleado"}
+
 ESTADOS = {
     "D": "Disponible",
     "R": "Reservado",
@@ -38,6 +54,9 @@ class Vehiculo(Base):
     fecha_entrada = Column(DateTime, nullable=False, default=datetime.now)
     estado = Column(String(1), nullable=False)
     potencia = Column(Integer, nullable=False)
+    # solo se rellenan cuando el vehículo está vendido
+    fecha_venta = Column(DateTime)
+    precio_final = Column(Float)
     # falta equipamiento y si es eléctrico o híbrido enchufable velocidad de carga, KW, etc
 
     @validates('anio')
@@ -100,19 +119,17 @@ class VehiculoEquipamiento(Base):
     atributo = relationship("Atributo", back_populates="vehiculos")
 
 class AuditVehiculo(Base):
+    """Historial de cambios sobre vehículos. La rellena el trigger tr_audit_vehiculo.
+    Guarda los valores resultantes de la operación (o los borrados, en un DELETE) y,
+    en UPDATE y DELETE, el estado anterior completo en datos_anteriores."""
     __tablename__ = "audit_vehiculo"
-    
-    # En las tablas de auditoría no suele haber una PK real de negocio, 
-    # pero SQLAlchemy necesita una para mapear la clase. 
-    # Usamos stamp + vin o creamos un id artificial si fuera necesario.
-    # Como la tabla de auditoría ya existe en SQL, la mapeamos tal cual:
-    
-    stamp = Column(DateTime, primary_key=True, default=datetime.now)
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    stamp = Column(DateTime, nullable=False, default=datetime.now)
     operacion = Column(String(1), nullable=False)
-    user_id = Column(String(100), nullable=False)
-    
-    # Campos del vehículo (mapeados de la tabla audit)
-    id_vehiculo = Column(Integer, primary_key=True) # Parte de la PK compuesta para SQLA
+    user_id = Column(String(100), nullable=False)  # email del usuario de la aplicación
+
+    id_vehiculo = Column(Integer)
     marca = Column(String(30))
     modelo = Column(String(80))
     kilometros = Column(Float)
@@ -128,3 +145,122 @@ class AuditVehiculo(Base):
     fecha_entrada = Column(DateTime)
     estado = Column(String(1))
     potencia = Column(Integer)
+    fecha_venta = Column(DateTime)
+    precio_final = Column(Float)
+    datos_anteriores = Column(JSONB)
+
+    ETIQUETAS = {
+        "marca": "Marca", "modelo": "Modelo", "kilometros": "Km", "vin": "VIN", "anio": "Año",
+        "motor": "Motor", "cilindrada": "Cilindrada", "consumo": "Consumo", "marchas": "Marchas",
+        "transmision": "Transmisión", "precio_compra": "Precio compra", "precio_venta": "Precio venta",
+        "fecha_entrada": "Fecha entrada", "estado": "Estado", "potencia": "Potencia",
+        "fecha_venta": "Fecha venta", "precio_final": "Precio final",
+    }
+
+    def cambios(self, incluir_costes=True):
+        """En un UPDATE, lista de (campo, antes, después) con lo que ha cambiado."""
+        if self.operacion != "U" or not self.datos_anteriores:
+            return []
+
+        def normalizar(valor):
+            if isinstance(valor, datetime):
+                return valor.isoformat()
+            return valor
+
+        def legible(valor):
+            if valor is None:
+                return "-"
+            if isinstance(valor, str) and len(valor) >= 10 and valor[4:5] == "-" and valor[10:11] == "T":
+                return valor[:10] if valor.endswith("T00:00:00") else valor.replace("T", " ")
+            return valor
+
+        resultado = []
+        for campo, etiqueta in self.ETIQUETAS.items():
+            if campo == "precio_compra" and not incluir_costes:
+                continue
+            antes = self.datos_anteriores.get(campo)
+            despues = normalizar(getattr(self, campo))
+            if antes != despues:
+                resultado.append((etiqueta, legible(antes), legible(despues)))
+        return resultado
+
+
+class Usuario(UserMixin, Base):
+    __tablename__ = "usuario"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    email = Column(String(120), nullable=False, unique=True)
+    nombre = Column(String(80), nullable=False)
+    password_hash = Column(String(255), nullable=False)
+    rol = Column(String(10), nullable=False, default="empleado")
+    activo = Column(Boolean, nullable=False, default=True)
+    # las cuentas nuevas y las reseteadas obligan a elegir contraseña propia
+    debe_cambiar_password = Column(Boolean, nullable=False, default=True)
+    creado = Column(DateTime, nullable=False, default=datetime.now)
+
+    permisos = relationship("UsuarioPermiso", back_populates="usuario",
+                            cascade="all, delete-orphan", lazy="joined")
+
+    @validates('rol')
+    def validate_rol(self, key, value):
+        if value not in ROLES:
+            raise ValueError("Rol no válido")
+        return value
+
+    @property
+    def es_admin(self):
+        return self.rol == "admin"
+
+    @property
+    def codigos_permisos(self):
+        return {p.permiso for p in self.permisos}
+
+    def tiene_permiso(self, permiso):
+        """El admin lo puede todo. El empleado, solo lo que se le ha concedido."""
+        return self.es_admin or permiso in self.codigos_permisos
+
+    # Flask-Login: una cuenta desactivada no puede iniciar ni mantener sesión
+    @property
+    def is_active(self):
+        return bool(self.activo)
+
+
+class UsuarioPermiso(Base):
+    __tablename__ = "usuario_permiso"
+
+    usuario_id = Column(Integer, ForeignKey("usuario.id", ondelete="CASCADE"), primary_key=True)
+    permiso = Column(String(40), primary_key=True)
+
+    usuario = relationship("Usuario", back_populates="permisos")
+
+    @validates('permiso')
+    def validate_permiso(self, key, value):
+        if value not in PERMISOS:
+            raise ValueError("Permiso no válido")
+        return value
+
+
+class AuditUsuario(Base):
+    """Historial de cambios en usuarios y permisos (trigger fn_audit_usuario).
+    Nunca contiene el hash de la contraseña, solo si se ha cambiado."""
+    __tablename__ = "audit_usuario"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    stamp = Column(DateTime, nullable=False, default=datetime.now)
+    operacion = Column(String(1), nullable=False)
+    user_id = Column(String(100), nullable=False)   # quién hizo el cambio
+    tabla = Column(String(30), nullable=False)
+    usuario_id = Column(Integer)                    # a quién afecta
+    datos_anteriores = Column(JSONB)
+    datos_nuevos = Column(JSONB)
+
+
+class RegistroAcceso(Base):
+    """Inicios de sesión (correctos y fallidos), cierres y accesos a páginas sensibles."""
+    __tablename__ = "registro_acceso"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    stamp = Column(DateTime, nullable=False, default=datetime.now)
+    email = Column(String(120))
+    evento = Column(String(30), nullable=False)
+    ip = Column(String(45))

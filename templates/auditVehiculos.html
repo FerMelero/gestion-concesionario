@@ -21,7 +21,8 @@
                         <th>Vehículo</th>
                         <th>VIN</th>
                         <th>Detalles Técnicos</th>
-                        <th>Precios (C/V)</th>
+                        <th>{{ "Precios (C/V)" if puede('costes.ver') else "Precio venta" }}</th>
+                        <th>Cambios</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -56,13 +57,22 @@
                             </div>
                         </td>
                         <td>
+                            {% if puede('costes.ver') %}
                             <div class="small text-danger">C: {{ "{:,.2f}".format(log.precio_compra) }}€</div>
+                            {% endif %}
                             <div class="small text-success fw-bold">V: {{ "{:,.2f}".format(log.precio_venta) }}€</div>
+                        </td>
+                        <td class="small">
+                            {% for campo, antes, despues in log.cambios(puede('costes.ver')) %}
+                            <div><span class="text-muted">{{ campo }}:</span> {{ antes }} <i class="bi bi-arrow-right"></i> <strong>{{ despues }}</strong></div>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endfor %}
                         </td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="8" class="text-center py-5 text-muted">
+                        <td colspan="9" class="text-center py-5 text-muted">
                             <i class="bi bi-info-circle fs-2"></i><br>
                             No hay registros de auditoría disponibles.
                         </td>
