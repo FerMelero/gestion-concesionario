@@ -1,10 +1,14 @@
 from __future__ import annotations
-from flask import Flask, redirect, render_template, request, session, url_for
+import os
+
+from flask import Flask, render_template
 from routes.vehicles import vehiculos_bp
 
 def create_app() -> Flask:
 
     app = Flask(__name__)
+    # necesaria para los mensajes flash; en producción debe venir del .env
+    app.secret_key = os.getenv("SECRET_KEY", "clave-solo-para-desarrollo")
 
     # Registramos las rutas del Blueprint
     app.register_blueprint(vehiculos_bp)

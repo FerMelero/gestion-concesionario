@@ -1,93 +1,124 @@
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import text
+from sqlalchemy import text, or_
+from sqlalchemy.exc import IntegrityError
 import config
 from models.entities import Base
 from models.entities import Vehiculo, AuditVehiculo
-from flask import request
 # en este archivo es en el que se crean enn el servidor postgres
 
 engine = config.engine
 Session = sessionmaker(bind=engine)
+
+class VinDuplicado(Exception):
+    """Ya existe un vehículo con ese VIN."""
+
 
 def crear_tablas():
     print("Estableciendoconexión con Postgres")
     Base.metadata.create_all(engine)
     print("Tablas creadas")
 
-def get_all_vehicles(page, per_page):
-    session = Session()
-    offset = (page - 1) * per_page
-    
-    query = session.query(Vehiculo).order_by(Vehiculo.id)
-    
-    items = query.limit(per_page).offset(offset).all()
-    
-    total = query.count()
-    
-    return {
-        'items': items,
-        'total': total,
-        'page': page,
-        'pages': (total + per_page - 1) // per_page
-    }
+ORDENES = {
+    "id": Vehiculo.id,
+    "marca": Vehiculo.marca,
+    "precio": Vehiculo.precio_venta,
+    "km": Vehiculo.kilometros,
+    "anio": Vehiculo.anio,
+    "entrada": Vehiculo.fecha_entrada,
+}
 
-def insert_vehicle(marca, modelo, kilometros, vin, anio, motor, potencia, pCompra, pVenta, estado, fEntrada, cilindrada, consumo, marchas, transmision):
+
+def get_all_vehicles(page, per_page, filtros=None):
+    """Devuelve una página de vehículos aplicando los filtros recibidos.
+
+    Filtros admitidos: q (marca, modelo o VIN), estado, motor, precio_min,
+    precio_max, km_max, orden y direccion ("asc" o "desc").
+    """
+    filtros = filtros or {}
     session = Session()
     try:
-        nuevo_vehiculo = Vehiculo(
-            marca=marca,
-            modelo=modelo,
-            kilometros=kilometros,
-            vin=vin, 
-            anio=anio,
-            motor=motor,              
-            potencia=potencia,
-            precio_compra= pCompra,
-            precio_venta=pVenta,
-            estado=estado,
-            fecha_entrada = fEntrada,
-            cilindrada= cilindrada,
-            consumo = consumo,
-            marchas = marchas,
-            transmision = transmision
-        )
+        query = session.query(Vehiculo)
 
-        session.add(nuevo_vehiculo)
-        session.commit()
-    
-    except Exception as e:
-        session.rollback()
-        print("Error", e)
-    
+        q = filtros.get("q")
+        if q:
+            patron = f"%{q}%"
+            query = query.filter(or_(
+                Vehiculo.marca.ilike(patron),
+                Vehiculo.modelo.ilike(patron),
+                Vehiculo.vin.ilike(patron),
+            ))
+        if filtros.get("estado"):
+            query = query.filter(Vehiculo.estado == filtros["estado"])
+        if filtros.get("motor"):
+            query = query.filter(Vehiculo.motor == filtros["motor"])
+        if filtros.get("precio_min") is not None or filtros.get("precio_max") is not None:
+            # el CSV importado trae precios NaN; en Postgres NaN es mayor que cualquier número
+            query = query.filter(Vehiculo.precio_venta != float("nan"))
+        if filtros.get("precio_min") is not None:
+            query = query.filter(Vehiculo.precio_venta >= filtros["precio_min"])
+        if filtros.get("precio_max") is not None:
+            query = query.filter(Vehiculo.precio_venta <= filtros["precio_max"])
+        if filtros.get("km_max") is not None:
+            query = query.filter(Vehiculo.kilometros <= filtros["km_max"])
+
+        total = query.count()
+
+        columna = ORDENES.get(filtros.get("orden"), Vehiculo.id)
+        columna = columna.desc() if filtros.get("direccion") == "desc" else columna.asc()
+        # el id como desempate mantiene la paginación estable
+        items = (query.order_by(columna, Vehiculo.id)
+                      .limit(per_page).offset((page - 1) * per_page).all())
+
+        return {
+            'items': items,
+            'total': total,
+            'page': page,
+            'pages': max(1, (total + per_page - 1) // per_page),
+        }
     finally:
         session.close()
+
+
+def insert_vehicle(datos):
+    """Inserta un vehículo a partir de un diccionario con los campos del modelo.
+
+    Lanza ValueError si el modelo no valida los datos y VinDuplicado si el VIN ya existe.
+    """
+    session = Session()
+    try:
+        session.add(Vehiculo(**datos))
+        session.commit()
+    except IntegrityError as e:
+        session.rollback()
+        raise VinDuplicado(datos.get("vin")) from e
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
 
 def vehicle_by_id(id):
     session = Session()
     try:
         return session.query(Vehiculo).filter(Vehiculo.id == id).first()
-    except Exception as e:
-        session.rollback()
-        print("Error", e)
     finally:
         session.close()
 
 
 def delete_vehicle(id):
+    """Borra el vehículo. Devuelve False si no existía."""
     session = Session()
     try:
         vehiculo = session.query(Vehiculo).filter(Vehiculo.id == id).first()
-        if vehiculo:
-            session.delete(vehiculo)
-            session.commit()
-        
-        else: 
-            print(f"VEhiculo no encontado")
-    
-    except Exception as e:
+        if vehiculo is None:
+            return False
+        session.delete(vehiculo)
+        session.commit()
+        return True
+    except Exception:
         session.rollback()
-        print("Error", e)
-
+        raise
     finally:
         session.close()
 
@@ -117,16 +148,23 @@ def cambiar_cc_electricos():
         session.close()
 
 def mod_vehiculo(id, datos_nuevos):
+    """Modifica un vehículo asignando atributo a atributo, para que se ejecuten
+    los validadores del modelo (con query.update() se saltarían).
+    Devuelve False si el vehículo no existe."""
     session = Session()
     try:
-        session.query(Vehiculo).filter(Vehiculo.id == id).update(datos_nuevos)
-        session.commit() 
-    except Exception as e:
+        vehiculo = session.query(Vehiculo).filter(Vehiculo.id == id).first()
+        if vehiculo is None:
+            return False
+        for campo, valor in datos_nuevos.items():
+            setattr(vehiculo, campo, valor)
+        session.commit()
+        return True
+    except Exception:
         session.rollback()
-        print("Error", e)
+        raise
     finally:
         session.close()
-    session = Session()
 
 from sqlalchemy import text
 
@@ -215,8 +253,10 @@ def crear_audits():
 
 def informacion_audit():
     session = Session()
-    audit = session.query(AuditVehiculo).all()
-    return audit
+    try:
+        return session.query(AuditVehiculo).order_by(AuditVehiculo.stamp.desc()).limit(200).all()
+    finally:
+        session.close()
 
 
 if __name__ == "__main__":

@@ -4,6 +4,22 @@ from datetime import datetime
 
 Base = declarative_base()
 
+# Valores permitidos (código -> etiqueta). Se usan en el modelo, los formularios y las plantillas.
+MOTORES = {
+    "G": "Gasolina",
+    "D": "Diésel",
+    "HB": "Híbrido",
+    "HE": "Híbrido enchufable",
+    "E": "Eléctrico",
+    "GNC": "Gas natural (GNC)",
+}
+ESTADOS = {
+    "D": "Disponible",
+    "R": "Reservado",
+    "T": "En taller",
+    "V": "Vendido",
+}
+
 class Vehiculo(Base):
     __tablename__ = "vehiculo"
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -34,15 +50,13 @@ class Vehiculo(Base):
     
     @validates('motor')
     def validate_motor(self, key, value): # Nombre único para que no se pisen
-        motores = ["D", "G", "HB", "E", "HE", "GNC"]
-        if value not in motores:
+        if value not in MOTORES:
             raise ValueError("Motor no válido")
         return value
     
     @validates('estado')
     def validate_estado(self, key, value): # Nombre único para que no se pisen
-        estados = ["D", "R", "V"]
-        if value not in estados:
+        if value not in ESTADOS:
             raise ValueError("Estado no válido")
         return value
 
