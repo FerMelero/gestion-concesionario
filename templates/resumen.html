@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% from "_componentes.html" import cabecera with context %}
+
+{% macro eur(valor) %}{% if valor is none %}-{% else %}{{ "{:,.0f}".format(valor) }} €{% endif %}{% endmacro %}
+
+{% block title %}Resumen económico | Concesionario{% endblock %}
+
+{% block content %}
+{% call cabecera("Resumen económico", "graph-up") %}{% endcall %}
+
+{% if r.sin_precio %}
+<div class="alert alert-warning small">{{ r.sin_precio }} vehículos no tienen precio informado y quedan fuera de todas las cifras.</div>
+{% endif %}
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3"><div class="card shadow-sm border-0 h-100"><div class="card-body">
+        <p class="text-muted small mb-1">Stock actual</p><h3 class="mb-0">{{ "{:,}".format(r.stock.unidades) }}</h3><small class="text-muted">vehículos sin vender</small>
+    </div></div></div>
+    <div class="col-md-3"><div class="card shadow-sm border-0 h-100"><div class="card-body">
+        <p class="text-muted small mb-1">Stock a precio de compra</p><h3 class="mb-0">{{ eur(r.stock.coste) }}</h3>
+    </div></div></div>
+    <div class="col-md-3"><div class="card shadow-sm border-0 h-100"><div class="card-body">
+        <p class="text-muted small mb-1">Stock a precio de venta</p><h3 class="mb-0">{{ eur(r.stock.valor_venta) }}</h3>
+        <small class="text-success">Margen potencial {{ eur(r.stock.valor_venta - r.stock.coste) }}</small>
+    </div></div></div>
+    <div class="col-md-3"><div class="card shadow-sm border-0 h-100"><div class="card-body">
+        <p class="text-muted small mb-1">Margen medio por venta</p><h3 class="mb-0">{{ eur(r.vendidos.margen_medio) }}</h3>
+        <small class="text-muted">{{ r.vendidos.unidades }} vendidos
+            {% if r.vendidos.dias_en_stock is not none %}· {{ "{:.0f}".format(r.vendidos.dias_en_stock) }} días de media en stock{% endif %}</small>
+    </div></div></div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <h5 class="section-title">Compras por mes</h5>
+        <div class="card shadow-sm border-0"><table class="table mb-0 small">
+            <thead class="table-light"><tr><th>Mes</th><th class="text-end">Unidades</th><th class="text-end">Importe</th></tr></thead>
+            <tbody>{% for f in r.compras %}<tr><td>{{ f.mes }}</td><td class="text-end">{{ f.unidades }}</td><td class="text-end">{{ eur(f.importe) }}</td></tr>
+            {% else %}<tr><td colspan="3" class="text-center text-muted py-3">Sin datos.</td></tr>{% endfor %}</tbody>
+        </table></div>
+    </div>
+    <div class="col-lg-6">
+        <h5 class="section-title">Ventas por mes</h5>
+        <div class="card shadow-sm border-0"><table class="table mb-0 small">
+            <thead class="table-light"><tr><th>Mes</th><th class="text-end">Unidades</th><th class="text-end">Ingresos</th><th class="text-end">Margen</th></tr></thead>
+            <tbody>{% for f in r.ventas %}<tr><td>{{ f.mes }}</td><td class="text-end">{{ f.unidades }}</td><td class="text-end">{{ eur(f.importe) }}</td><td class="text-end">{{ eur(f.margen) }}</td></tr>
+            {% else %}<tr><td colspan="4" class="text-center text-muted py-3">Aún no hay ventas con fecha de venta.</td></tr>{% endfor %}</tbody>
+        </table></div>
+    </div>
+    <div class="col-12">
+        <h5 class="section-title">Margen por marca (vendidos)</h5>
+        <div class="card shadow-sm border-0"><table class="table mb-0 small">
+            <thead class="table-light"><tr><th>Marca</th><th class="text-end">Vendidos</th><th class="text-end">Margen total</th></tr></thead>
+            <tbody>{% for f in r.por_marca %}<tr><td>{{ f.marca }}</td><td class="text-end">{{ f.unidades }}</td><td class="text-end">{{ eur(f.margen) }}</td></tr>
+            {% else %}<tr><td colspan="3" class="text-center text-muted py-3">Sin ventas registradas.</td></tr>{% endfor %}</tbody>
+        </table></div>
+    </div>
+</div>
+{% endblock %}

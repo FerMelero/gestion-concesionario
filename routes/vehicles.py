@@ -1,10 +1,13 @@
 from datetime import datetime
 
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
+from flask_login import current_user, login_required
 
 from models.db import (VinDuplicado, delete_vehicle, get_all_vehicles, informacion_audit,
-                       insert_vehicle, mod_vehiculo, vehicle_by_id)
+                       insert_vehicle, mod_vehiculo, registrar_acceso, resumen_economico,
+                       vehicle_by_id)
 from models.entities import ESTADOS, MOTORES
+from utils.seguridad import permiso_requerido
 
 vehiculos_bp = Blueprint('vehiculos', __name__)
 
@@ -40,6 +43,8 @@ def _valores_formulario(vehiculo=None, form=None):
             "transmision": vehiculo.transmision or "", "marchas": txt(vehiculo.marchas),
             "pCompra": vehiculo.precio_compra, "pVenta": vehiculo.precio_venta,
             "estado": vehiculo.estado,
+            "fVenta": vehiculo.fecha_venta.strftime('%Y-%m-%d') if vehiculo.fecha_venta else "",
+            "precioFinal": txt(vehiculo.precio_final),
         }
     return {**base, **form.to_dict()} if hasattr(form, "to_dict") else {**base, **form}
 
@@ -64,9 +69,10 @@ def _fecha(valor, etiqueta):
         raise ValueError(f"El campo «{etiqueta}» no es una fecha válida.") from None
 
 
-def _leer_formulario(form, con_vin):
+def _leer_formulario(form, con_vin, con_costes=True):
     """Lee y convierte el formulario de alta/edición. Lanza ValueError con un
-    mensaje legible si algún campo no es correcto."""
+    mensaje legible si algún campo no es correcto. Si con_costes es False el precio de
+    compra no se lee ni se devuelve, así que al editar no se toca."""
     datos = {
         "marca": form.get("marca", "").strip(),
         "modelo": form.get("modelo", "").strip(),
@@ -79,18 +85,31 @@ def _leer_formulario(form, con_vin):
         "potencia": _numero(form.get("potencia"), int, "Potencia", True),
         "transmision": form.get("transmision", "").strip() or None,
         "marchas": _numero(form.get("marchas"), int, "Marchas"),
-        "precio_compra": _numero(form.get("pCompra"), float, "Precio de compra", True),
         "precio_venta": _numero(form.get("pVenta"), float, "Precio de venta", True),
         "estado": form.get("estado", ""),
     }
+    if con_costes:
+        datos["precio_compra"] = _numero(form.get("pCompra"), float, "Precio de compra", True)
     if not datos["marca"] or not datos["modelo"]:
         raise ValueError("La marca y el modelo son obligatorios.")
     if datos["motor"] not in MOTORES:
         raise ValueError("Tipo de motor no válido.")
     if datos["estado"] not in ESTADOS:
         raise ValueError("Estado no válido.")
-    if datos["kilometros"] < 0 or datos["precio_compra"] < 0 or datos["precio_venta"] < 0:
+    importes = [datos["kilometros"], datos["precio_venta"], datos.get("precio_compra", 0)]
+    if any(i < 0 for i in importes):
         raise ValueError("Los kilómetros y los precios no pueden ser negativos.")
+
+    # datos de venta: solo tienen sentido si el vehículo está vendido
+    if datos["estado"] == "V":
+        fecha_venta = (form.get("fVenta") or "").strip()
+        datos["fecha_venta"] = _fecha(fecha_venta, "Fecha de venta") if fecha_venta else datetime.now()
+        datos["precio_final"] = _numero(form.get("precioFinal"), float, "Precio final") or datos["precio_venta"]
+        if datos["precio_final"] < 0:
+            raise ValueError("El precio final no puede ser negativo.")
+    else:
+        datos["fecha_venta"] = None
+        datos["precio_final"] = None
     if con_vin:
         vin = form.get("vin", "").strip().upper()
         if len(vin) != 17:
@@ -125,6 +144,7 @@ def _filtros_desde_url():
 
 # ruta por defecto: listado de vehículos con búsqueda, filtros y ordenación
 @vehiculos_bp.route('/')
+@login_required
 def index():
     page = max(1, request.args.get('page', 1, type=int))
     filtros = _filtros_desde_url()
@@ -144,6 +164,7 @@ def index():
 
 
 @vehiculos_bp.route("/nuevo", methods=["GET", "POST"])
+@permiso_requerido("vehiculos.crear")
 def new_vehicle():
     if request.method == "POST":
         try:
@@ -163,6 +184,7 @@ def new_vehicle():
 
 
 @vehiculos_bp.route('/vehiculos/eliminar/<int:id>', methods=["GET", "POST"])
+@permiso_requerido("vehiculos.eliminar")
 def eliminar_vehiculo(id):
     vehiculo = vehicle_by_id(id)
     if vehiculo is None:
@@ -176,6 +198,7 @@ def eliminar_vehiculo(id):
 
 
 @vehiculos_bp.route('/vehiculos/<int:id>')
+@login_required
 def vehiculo_id(id):
     vehiculo = vehicle_by_id(id)
     if vehiculo is None:
@@ -184,6 +207,7 @@ def vehiculo_id(id):
 
 
 @vehiculos_bp.route('/vehiculos/modificar/<int:id>', methods=["GET", "POST"])
+@permiso_requerido("vehiculos.editar")
 def modificar_vehiculo(id):
     vehiculo = vehicle_by_id(id)
     if vehiculo is None:
@@ -191,7 +215,8 @@ def modificar_vehiculo(id):
 
     if request.method == "POST":
         try:
-            datos = _leer_formulario(request.form, con_vin=False)
+            datos = _leer_formulario(request.form, con_vin=False,
+                                     con_costes=current_user.tiene_permiso('costes.ver'))
             if not mod_vehiculo(id, datos):
                 abort(404)
         except ValueError as e:
@@ -206,5 +231,14 @@ def modificar_vehiculo(id):
 
 
 @vehiculos_bp.route('/vehiculos/auditoria')
+@permiso_requerido("auditoria.ver")
 def auditoria_vehiculos():
+    registrar_acceso(current_user.email, "acceso_auditoria", request.remote_addr)
     return render_template('auditVehiculos.html', auditoria=informacion_audit())
+
+
+@vehiculos_bp.route('/resumen')
+@permiso_requerido("resumen.ver")
+def resumen():
+    registrar_acceso(current_user.email, "acceso_resumen", request.remote_addr)
+    return render_template('resumen.html', r=resumen_economico())

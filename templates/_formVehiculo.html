@@ -6,6 +6,7 @@
      texto_boton   -> texto del botón de guardar
      es_edicion    -> True si es edición (el VIN no se puede cambiar) #}
 <form action="{{ form_action }}" method="POST" class="card shadow-sm border-0">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="card-body">
 
         <h5 class="section-title">Información básica</h5>
@@ -80,10 +81,12 @@
 
         <h5 class="section-title">Precios y estado</h5>
         <div class="row g-3">
+            {% if not es_edicion or puede('costes.ver') %}
             <div class="col-md-3">
                 <label class="form-label">Precio de compra (€)</label>
                 <input type="number" step="0.01" min="0" name="pCompra" class="form-control" value="{{ valores.pCompra }}" required>
             </div>
+            {% endif %}
             <div class="col-md-3">
                 <label class="form-label">Precio de venta (€)</label>
                 <input type="number" step="0.01" min="0" name="pVenta" class="form-control" value="{{ valores.pVenta }}" required>
@@ -99,6 +102,16 @@
                     <option value="{{ codigo }}" {{ 'selected' if valores.estado == codigo }}>{{ nombre }}</option>
                     {% endfor %}
                 </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Fecha de venta</label>
+                <input type="date" name="fVenta" class="form-control" value="{{ valores.fVenta }}">
+                <div class="form-text">Solo si está vendido. Vacía, se usa hoy.</div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Precio final (€)</label>
+                <input type="number" step="0.01" min="0" name="precioFinal" class="form-control" value="{{ valores.precioFinal }}">
+                <div class="form-text">Solo si está vendido. Vacío, se usa el precio de venta.</div>
             </div>
         </div>
     </div>

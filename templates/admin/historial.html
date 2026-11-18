@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% from "_componentes.html" import cabecera with context %}
+
+{% block title %}Historial de usuarios | Concesionario{% endblock %}
+
+{% block content %}
+{% call cabecera("Historial de usuarios", "clock-history") %}
+    <a href="{{ url_for('admin.usuarios') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Volver a usuarios</a>
+{% endcall %}
+
+<h5 class="section-title">Cambios en cuentas y permisos</h5>
+<div class="card shadow-sm border-0 mb-4">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+            <thead class="table-light">
+                <tr><th>Fecha</th><th>Hecho por</th><th>Operación</th><th>Sobre</th><th>Antes</th><th>Después</th></tr>
+            </thead>
+            <tbody>
+                {% for c in cambios %}
+                <tr>
+                    <td class="text-nowrap">{{ c.stamp.strftime('%d/%m/%Y %H:%M:%S') }}</td>
+                    <td>{{ c.user_id }}</td>
+                    <td>{{ {'I': 'Alta', 'U': 'Modificación', 'D': 'Baja'}.get(c.operacion, c.operacion) }}</td>
+                    <td>{{ 'Cuenta' if c.tabla == 'usuario' else 'Permiso' }} #{{ c.usuario_id }}</td>
+                    <td><code class="text-muted">{{ c.datos_anteriores if c.datos_anteriores else '-' }}</code></td>
+                    <td><code class="text-muted">{{ c.datos_nuevos if c.datos_nuevos else '-' }}</code></td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" class="text-center text-muted py-4">Sin cambios registrados.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<h5 class="section-title">Accesos</h5>
+<div class="card shadow-sm border-0">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 small">
+            <thead class="table-light">
+                <tr><th>Fecha</th><th>Email</th><th>Evento</th><th>IP</th></tr>
+            </thead>
+            <tbody>
+                {% set eventos = {'login_ok': 'Inicio de sesión', 'login_fallido': 'Intento fallido', 'login_bloqueado': 'Bloqueado por intentos', 'logout': 'Cierre de sesión', 'acceso_auditoria': 'Consulta de auditoría', 'acceso_resumen': 'Consulta del resumen'} %}
+                {% for a in accesos %}
+                <tr>
+                    <td class="text-nowrap">{{ a.stamp.strftime('%d/%m/%Y %H:%M:%S') }}</td>
+                    <td>{{ a.email or '-' }}</td>
+                    <td><span class="badge {{ 'bg-danger' if a.evento in ('login_fallido', 'login_bloqueado') else 'bg-secondary' }}">{{ eventos.get(a.evento, a.evento) }}</span></td>
+                    <td>{{ a.ip or '-' }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" class="text-center text-muted py-4">Sin accesos registrados.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

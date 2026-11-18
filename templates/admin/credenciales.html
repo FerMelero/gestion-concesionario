@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% from "_componentes.html" import cabecera with context %}
+
+{% block title %}Contraseña temporal | Concesionario{% endblock %}
+
+{% block content %}
+{% call cabecera("Contraseña temporal", "key") %}
+    <a href="{{ url_for('admin.usuarios') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Volver a usuarios</a>
+{% endcall %}
+
+<div class="card shadow-sm border-warning">
+    <div class="card-body">
+        <p>{{ 'Cuenta creada para' if nuevo else 'Contraseña reseteada para' }} <strong>{{ nombre }}</strong> ({{ email }}).</p>
+        <p class="mb-1 text-muted small">Contraseña temporal:</p>
+        <p class="fs-4"><code>{{ password }}</code></p>
+        <div class="alert alert-warning mb-0 small">
+            Se muestra <strong>solo ahora</strong> y no se puede volver a consultar. Entrégasela al empleado por un canal seguro.
+            Al entrar tendrá que elegir una contraseña propia.
+        </div>
+    </div>
+</div>
+{% endblock %}
