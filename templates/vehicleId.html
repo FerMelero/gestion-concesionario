@@ -14,8 +14,8 @@
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
                 <h3 class="mb-0">{{ vehiculo.marca }} <span class="text-muted">{{ vehiculo.modelo }}</span></h3>
-                <span class="badge {% if vehiculo.estado == 'D' %}bg-success{% elif vehiculo.estado == 'V' %}bg-danger{% else %}bg-warning text-dark{% endif %} fs-6">
-                    {% if vehiculo.estado == 'D' %}Disponible{% elif vehiculo.estado == 'V' %}Vendido{% else %}En Taller{% endif %}
+                <span class="badge {{ {'D': 'bg-success', 'V': 'bg-danger', 'R': 'bg-info text-dark', 'T': 'bg-warning text-dark'}[vehiculo.estado] }} fs-6">
+                    {{ ESTADOS[vehiculo.estado] }}
                 </span>
             </div>
             <div class="card-body">
@@ -48,16 +48,12 @@
                         <tr>
                             <th scope="row">Tipo de Motor</th>
                             <td>
-                                {% if vehiculo.motor == 'G' %}Gasolina
-                                {% elif vehiculo.motor == 'D' %}Diésel
-                                {% elif vehiculo.motor == 'E' %}Eléctrico
-                                {% elif vehiculo.motor == 'HB' %}Híbrido
-                                {% else %}{{ vehiculo.motor }}{% endif %}
+                                {{ MOTORES.get(vehiculo.motor, vehiculo.motor) }}
                             </td>
                         </tr>
                         <tr>
                             <th scope="row">Cilindrada</th>
-                            <td>{{ vehiculo.cilindrada }} cc</td>
+                            <td>{{ vehiculo.cilindrada ~ ' cc' if vehiculo.cilindrada is not none else '-' }}</td>
                         </tr>
                         <tr>
                             <th scope="row">Transmisión</th>

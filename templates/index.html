@@ -8,6 +8,69 @@
     <a href="{{ url_for('vehiculos.new_vehicle') }}" class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i> Añadir Vehículo</a>
 </div>
 
+
+<form method="get" action="{{ url_for('vehiculos.index') }}" class="card shadow-sm border-0 mb-3">
+    <div class="card-body">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small text-muted mb-1">Buscar</label>
+                <input type="text" name="q" value="{{ filtros.q }}" class="form-control" placeholder="Marca, modelo o VIN">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">Estado</label>
+                <select name="estado" class="form-select">
+                    <option value="">Todos</option>
+                    {% for codigo, nombre in ESTADOS.items() %}
+                    <option value="{{ codigo }}" {{ 'selected' if filtros.estado == codigo }}>{{ nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">Motor</label>
+                <select name="motor" class="form-select">
+                    <option value="">Todos</option>
+                    {% for codigo, nombre in MOTORES.items() %}
+                    <option value="{{ codigo }}" {{ 'selected' if filtros.motor == codigo }}>{{ nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">Precio mín. (€)</label>
+                <input type="number" min="0" name="precio_min" value="{{ filtros.precio_min if filtros.precio_min is not none else '' }}" class="form-control">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">Precio máx. (€)</label>
+                <input type="number" min="0" name="precio_max" value="{{ filtros.precio_max if filtros.precio_max is not none else '' }}" class="form-control">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">Km máx.</label>
+                <input type="number" min="0" name="km_max" value="{{ filtros.km_max if filtros.km_max is not none else '' }}" class="form-control">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">Ordenar por</label>
+                <select name="orden" class="form-select">
+                    {% for clave, nombre in [('id', 'Orden de alta'), ('marca', 'Marca'), ('precio', 'Precio de venta'), ('km', 'Kilómetros'), ('anio', 'Año'), ('entrada', 'Fecha de entrada')] %}
+                    <option value="{{ clave }}" {{ 'selected' if filtros.orden == clave }}>{{ nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">Sentido</label>
+                <select name="direccion" class="form-select">
+                    <option value="asc" {{ 'selected' if filtros.direccion == 'asc' }}>Ascendente</option>
+                    <option value="desc" {{ 'selected' if filtros.direccion == 'desc' }}>Descendente</option>
+                </select>
+            </div>
+            <div class="col-md-5 d-flex gap-2 justify-content-md-end">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-search me-1"></i>Aplicar</button>
+                {% if hay_filtros or filtros.orden != 'id' or filtros.direccion != 'asc' %}
+                <a href="{{ url_for('vehiculos.index') }}" class="btn btn-outline-secondary">Limpiar</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</form>
+
 <div class="card shadow-sm border-0">
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -27,7 +90,7 @@
                 <tbody>
                     {% for v in vehiculos %}
                     <tr>
-                        <td>{{ v.id_vehiculo }}</td>
+                        <td>{{ v.id }}</td>
                         <td>
                             <strong>{{ v.marca }}</strong><br>
                             <small class="text-muted">{{ v.modelo }}</small>
@@ -35,28 +98,21 @@
                         <td><code>{{ v.vin }}</code></td>
                         <td>{{ v.anio.year }}</td>
                         <td>
-                            <span class="badge rounded-pill bg-info text-dark">{{ v.motor }}</span>
+                            <span class="badge rounded-pill bg-info text-dark" title="{{ MOTORES.get(v.motor, v.motor) }}">{{ v.motor }}</span>
                         </td>
-                        <td>{{ "{:,.2f}".format(v.precio_venta) }} €</td>
+                        <td>{% if v.precio_venta == v.precio_venta %}{{ "{:,.2f}".format(v.precio_venta) }} €{% else %}<span class="text-muted">Sin precio</span>{% endif %}</td>
                         <td>
-                            {% if v.estado == 'D' %}
-                                <span class="badge bg-success">Disponible</span>
-                            {% elif v.estado == 'V' %}
-                                <span class="badge bg-danger">Vendido</span>
-                            {% else %}
-                                <span class="badge bg-warning text-dark">Taller</span>
-                            {% endif %}
+                            <span class="badge {{ {'D': 'bg-success', 'V': 'bg-danger', 'R': 'bg-info text-dark', 'T': 'bg-warning text-dark'}[v.estado] }}">{{ ESTADOS[v.estado] }}</span>
                         </td>
                         <td>
-                            <a href="{{ url_for('vehiculos.vehiculo_id', id=v.id) }}" class="btn btn-sm btn-outline-secondary">
-    <i class="bi bi-pencil"></i>
-</a>
-                            <a href="{{ url_for('vehiculos.eliminar_vehiculo', id=v.id) }}" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                            <a href="{{ url_for('vehiculos.vehiculo_id', id=v.id) }}" class="btn btn-sm btn-outline-secondary" title="Ver ficha"><i class="bi bi-eye"></i></a>
+                            <a href="{{ url_for('vehiculos.modificar_vehiculo', id=v.id) }}" class="btn btn-sm btn-outline-secondary" title="Editar"><i class="bi bi-pencil"></i></a>
+                            <a href="{{ url_for('vehiculos.eliminar_vehiculo', id=v.id) }}" class="btn btn-sm btn-outline-danger" title="Eliminar"><i class="bi bi-trash"></i></a>
                         </td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="8" class="text-center py-4 text-muted">No hay vehículos registrados.</td>
+                        <td colspan="8" class="text-center py-4 text-muted">{{ "Ningún vehículo coincide con los filtros." if hay_filtros else "No hay vehículos registrados." }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -72,7 +128,7 @@
             
             {# Botón Anterior #}
             <li class="page-item {{ 'disabled' if pagination.page <= 1 }}">
-                <a class="page-link" href="{{ url_for('vehiculos.index', page=pagination.page - 1) if pagination.page > 1 else '#' }}" tabindex="-1" aria-disabled="true">
+                <a class="page-link" href="{{ url_for('vehiculos.index', page=pagination.page - 1, **params) if pagination.page > 1 else '#' }}" tabindex="-1" aria-disabled="true">
                     <i class="bi bi-chevron-left"></i> Anterior
                 </a>
             </li>
@@ -85,7 +141,7 @@
 
             
             <li class="page-item {{ 'disabled' if pagination.page >= pagination.pages }}">
-                <a class="page-link" href="{{ url_for('vehiculos.index', page=pagination.page + 1) if pagination.page < pagination.pages else '#' }}">
+                <a class="page-link" href="{{ url_for('vehiculos.index', page=pagination.page + 1, **params) if pagination.page < pagination.pages else '#' }}">
                     Siguiente <i class="bi bi-chevron-right"></i>
                 </a>
             </li>
@@ -93,7 +149,7 @@
         </ul>
     </nav>
     <div class="text-center mt-2">
-        <small class="text-muted">Total de registros: {{ pagination.total }}</small>
+        <small class="text-muted">{{ "Resultados" if hay_filtros else "Total de registros" }}: {{ pagination.total }}</small>
     </div>
 </div>
 
