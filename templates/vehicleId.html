@@ -1,22 +1,19 @@
 {% extends "base.html" %}
+{% from "_componentes.html" import cabecera, badge_estado with context %}
 
 {% block title %}Detalle: {{ vehiculo.marca }} {{ vehiculo.modelo }}{% endblock %}
 
 {% block content %}
-<div class="mb-4">
-    <a href="{{ url_for('vehiculos.index') }}" class="btn btn-outline-secondary btn-sm">
-        <i class="bi bi-arrow-left"></i> Volver al inventario
-    </a>
-</div>
+{% call cabecera("Ficha del vehículo", "car-front", "#" ~ vehiculo.id) %}
+    <a href="{{ url_for('vehiculos.index') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Volver al inventario</a>
+{% endcall %}
 
 <div class="row">
     <div class="col-md-8">
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
                 <h3 class="mb-0">{{ vehiculo.marca }} <span class="text-muted">{{ vehiculo.modelo }}</span></h3>
-                <span class="badge {{ {'D': 'bg-success', 'V': 'bg-danger', 'R': 'bg-info text-dark', 'T': 'bg-warning text-dark'}[vehiculo.estado] }} fs-6">
-                    {{ ESTADOS[vehiculo.estado] }}
-                </span>
+                {{ badge_estado(vehiculo.estado, 'fs-6') }}
             </div>
             <div class="card-body">
                 <div class="row text-center mb-4">
@@ -81,7 +78,7 @@
         <div class="card shadow-sm border-primary mb-4">
             <div class="card-body">
                 <h5 class="card-title text-muted">Precio de Venta</h5>
-                <h2 class="text-primary fw-bold">{{ "{:,.2f}".format(vehiculo.precio_venta) }} €</h2>
+                <h2 class="text-primary fw-bold mb-0">{{ "{:,.2f}".format(vehiculo.precio_venta) }} €</h2>
                 <hr>
                 <p class="small text-muted">Precio de compra (interno): {{ "{:,.2f}".format(vehiculo.precio_compra) }} €</p>
                 <p class="small text-success fw-bold">

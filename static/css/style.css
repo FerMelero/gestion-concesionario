@@ -23,3 +23,27 @@ code {
 .table-hover tbody tr {
     transition: background-color 0.2s ease;
 }
+
+/* Cabecera de página y títulos de sección, comunes a todas las vistas */
+.page-header h2 {
+    font-size: 1.6rem;
+    font-weight: 600;
+}
+
+.section-title {
+    color: var(--bs-primary);
+    font-size: 1.05rem;
+    font-weight: 600;
+    border-bottom: 1px solid var(--bs-border-color);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.form-label {
+    font-weight: 500;
+}
+
+/* Enlace activo de la barra de navegación */
+.navbar .nav-link.active {
+    font-weight: 600;
+}

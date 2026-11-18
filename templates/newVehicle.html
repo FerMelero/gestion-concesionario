@@ -1,106 +1,16 @@
 {% extends "base.html" %}
+{% from "_componentes.html" import cabecera with context %}
 
-{% block title %}Nuevo Vehículo{% endblock %}
+{% block title %}Nuevo vehículo | Concesionario{% endblock %}
 
 {% block content %}
-<div class="card shadow p-4 border-0">
-    <h2 class="mb-4 text-primary"><i class="bi bi-car-front-fill me-2"></i>Registrar Nuevo Vehículo</h2>
-    <form action="{{ url_for('vehiculos.new_vehicle') }}" method="POST">
-        
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label class="form-label font-weight-bold">Marca:</label>
-                <input type="text" name="marca" class="form-control" placeholder="Ej: Audi" value="{{ form.get('marca', '') }}" required>
-            </div>
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Modelo:</label>
-                <input type="text" name="modelo" class="form-control" placeholder="Ej: A3 Sportback" value="{{ form.get('modelo', '') }}" required>
-            </div>
-        </div>
+{% call cabecera("Nuevo vehículo", "plus-circle") %}
+    <a href="{{ url_for('vehiculos.index') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Volver al inventario</a>
+{% endcall %}
 
-        <div class="row">
-            <div class="col-md-4 mb-3">
-                <label class="form-label">VIN (Número de Bastidor):</label>
-                <input type="text" name="vin" class="form-control" maxlength="17" style="text-transform: uppercase;" value="{{ form.get('vin', '') }}" required>
-            </div>
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Kilómetros:</label>
-                <input type="number" step="0.1" min="0" name="kilometros" class="form-control" value="{{ form.get('kilometros', '') }}" required>
-            </div>
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Año fabricación:</label>
-                <input type="date" name="anio" class="form-control" value="{{ form.get('anio', '') }}" required>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-3 mb-3">
-                <label class="form-label">Tipo Motor:</label>
-                <select name="motor" class="form-select" required>
-                    {% for codigo, nombre in MOTORES.items() %}
-                    <option value="{{ codigo }}" {{ 'selected' if form.get('motor', 'G') == codigo }}>{{ nombre }} ({{ codigo }})</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-3 mb-3">
-                <label class="form-label">Cilindrada (cc):</label>
-                <input type="number" name="cilindrada" class="form-control" placeholder="Ej: 1998" value="{{ form.get('cilindrada', '') }}">
-            </div>
-            <div class="col-md-3 mb-3">
-                <label class="form-label">Potencia (CV):</label>
-                <input type="number" name="potencia" class="form-control" value="{{ form.get('potencia', '') }}" required>
-            </div>
-            <div class="col-md-3 mb-3">
-                <label class="form-label">Consumo (L/100km):</label>
-                <input type="number" step="0.01" name="consumo" class="form-control" value="{{ form.get('consumo', '') }}" required>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Tipo Transmisión:</label>
-                <select name="transmision" class="form-select">
-                    <option value="Manual" {{ 'selected' if form.get('transmision') == 'Manual' }}>Manual</option>
-                    <option value="Automático" {{ 'selected' if form.get('transmision') == 'Automático' }}>Automático</option>
-                    <option value="Doble Embrague" {{ 'selected' if form.get('transmision') == 'Doble Embrague' }}>Doble Embrague</option>
-                    <option value="CVT" {{ 'selected' if form.get('transmision') == 'CVT' }}>CVT</option>
-                </select>
-            </div>
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Nº de Marchas:</label>
-                <input type="number" name="marchas" class="form-control" placeholder="Ej: 6" value="{{ form.get('marchas', '') }}">
-            </div>
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Estado:</label>
-                <select name="estado" class="form-select" required>
-                    {% for codigo, nombre in ESTADOS.items() %}
-                    <option value="{{ codigo }}" {{ 'selected' if form.get('estado', 'D') == codigo }}>{{ nombre }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-        </div>
-
-        <div class="row border-top pt-3 mt-2">
-            <div class="col-md-4 mb-3">
-                <label class="form-label text-danger">Precio Compra (€):</label>
-                <input type="number" step="0.01" min="0" name="pCompra" class="form-control" value="{{ form.get('pCompra', '') }}" required>
-            </div>
-            <div class="col-md-4 mb-3">
-                <label class="form-label text-success">Precio Venta (€):</label>
-                <input type="number" step="0.01" min="0" name="pVenta" class="form-control" value="{{ form.get('pVenta', '') }}" required>
-            </div>
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Fecha de Entrada:</label>
-                <input type="date" name="fEntrada" class="form-control" value="{{ form.get('fEntrada', today_date) }}" required>
-            </div>
-        </div>
-
-        <div class="d-grid gap-2">
-            <button type="submit" class="btn btn-primary btn-lg mt-3">
-                <i class="bi bi-save me-2"></i>Registrar Vehículo en Inventario
-            </button>
-            <a href="{{ url_for('vehiculos.index') }}" class="btn btn-link text-muted">Cancelar y Volver</a>
-        </div>
-    </form>
-</div>
+{% set form_action = url_for('vehiculos.new_vehicle') %}
+{% set cancelar_url = url_for('vehiculos.index') %}
+{% set texto_boton = "Registrar vehículo" %}
+{% set es_edicion = False %}
+{% include "_formVehiculo.html" %}
 {% endblock %}

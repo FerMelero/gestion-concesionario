@@ -1,0 +1,110 @@
+{# Formulario compartido por el alta y la edición.
+   Variables que debe definir la plantilla que lo incluye:
+     valores       -> diccionario con el valor de cada campo
+     form_action   -> URL a la que se envía
+     cancelar_url  -> a dónde vuelve "Cancelar"
+     texto_boton   -> texto del botón de guardar
+     es_edicion    -> True si es edición (el VIN no se puede cambiar) #}
+<form action="{{ form_action }}" method="POST" class="card shadow-sm border-0">
+    <div class="card-body">
+
+        <h5 class="section-title">Información básica</h5>
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <label class="form-label">Marca</label>
+                <input type="text" name="marca" class="form-control" placeholder="Ej: Audi" value="{{ valores.marca }}" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Modelo</label>
+                <input type="text" name="modelo" class="form-control" placeholder="Ej: A3 Sportback" value="{{ valores.modelo }}" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">VIN (número de bastidor)</label>
+                {% if es_edicion %}
+                <input type="text" class="form-control bg-light" value="{{ valores.vin }}" readonly>
+                <div class="form-text">El VIN no se puede modificar.</div>
+                {% else %}
+                <input type="text" name="vin" class="form-control text-uppercase" maxlength="17" value="{{ valores.vin }}" required>
+                {% endif %}
+            </div>
+        </div>
+
+        <h5 class="section-title">Especificaciones técnicas</h5>
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <label class="form-label">Kilómetros</label>
+                <input type="number" step="0.1" min="0" name="kilometros" class="form-control" value="{{ valores.kilometros }}" required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Año de fabricación</label>
+                <input type="date" name="anio" class="form-control" value="{{ valores.anio }}" required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Tipo de motor</label>
+                <select name="motor" class="form-select" required>
+                    {% for codigo, nombre in MOTORES.items() %}
+                    <option value="{{ codigo }}" {{ 'selected' if valores.motor == codigo }}>{{ nombre }} ({{ codigo }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Potencia (CV)</label>
+                <input type="number" min="0" name="potencia" class="form-control" value="{{ valores.potencia }}" required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Cilindrada (cc)</label>
+                <input type="number" min="0" name="cilindrada" class="form-control" placeholder="Ej: 1998" value="{{ valores.cilindrada }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Consumo (L/100 km)</label>
+                <input type="number" step="0.01" min="0" name="consumo" class="form-control" value="{{ valores.consumo }}" required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Transmisión</label>
+                <select name="transmision" class="form-select">
+                    <option value="" {{ 'selected' if not valores.transmision }}>Sin especificar</option>
+                    {% for t in TRANSMISIONES %}
+                    <option value="{{ t }}" {{ 'selected' if valores.transmision == t }}>{{ t }}</option>
+                    {% endfor %}
+                    {# si el vehículo trae una transmisión que no está en la lista, no se pierde #}
+                    {% if valores.transmision and valores.transmision not in TRANSMISIONES %}
+                    <option value="{{ valores.transmision }}" selected>{{ valores.transmision }}</option>
+                    {% endif %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Nº de marchas</label>
+                <input type="number" min="0" name="marchas" class="form-control" placeholder="Ej: 6" value="{{ valores.marchas }}">
+            </div>
+        </div>
+
+        <h5 class="section-title">Precios y estado</h5>
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Precio de compra (€)</label>
+                <input type="number" step="0.01" min="0" name="pCompra" class="form-control" value="{{ valores.pCompra }}" required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Precio de venta (€)</label>
+                <input type="number" step="0.01" min="0" name="pVenta" class="form-control" value="{{ valores.pVenta }}" required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Fecha de entrada</label>
+                <input type="date" name="fEntrada" class="form-control" value="{{ valores.fEntrada }}" required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Estado</label>
+                <select name="estado" class="form-select" required>
+                    {% for codigo, nombre in ESTADOS.items() %}
+                    <option value="{{ codigo }}" {{ 'selected' if valores.estado == codigo }}>{{ nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-footer bg-white d-flex justify-content-end gap-2 py-3">
+        <a href="{{ cancelar_url }}" class="btn btn-outline-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary px-4"><i class="bi bi-save me-2"></i>{{ texto_boton }}</button>
+    </div>
+</form>
