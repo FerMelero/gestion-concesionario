@@ -1,20 +1,18 @@
 {% extends "base.html" %}
+{% from "_componentes.html" import cabecera with context %}
 
 {% block title %}Auditoría de Cambios | Concesionario{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="bi bi-shield-check me-2"></i>Registro de Auditoría</h2>
-    <div class="text-muted">
-        <small>Mostrando últimos cambios en la flota</small>
-    </div>
-</div>
+{% call cabecera("Registro de auditoría", "shield-check") %}
+    <span class="text-muted align-self-center small">Últimos 200 cambios en la flota</span>
+{% endcall %}
 
 <div class="card shadow-sm border-0">
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
-                <thead class="table-dark">
+                <thead class="table-light">
                     <tr>
                         <th>Operación</th>
                         <th>Fecha y Hora</th>
@@ -59,7 +57,7 @@
                         </td>
                         <td>
                             <div class="small text-danger">C: {{ "{:,.2f}".format(log.precio_compra) }}€</div>
-                            <div class="small text-success font-weight-bold">V: {{ "{:,.2f}".format(log.precio_venta) }}€</div>
+                            <div class="small text-success fw-bold">V: {{ "{:,.2f}".format(log.precio_venta) }}€</div>
                         </td>
                     </tr>
                     {% else %}

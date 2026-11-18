@@ -11,10 +11,37 @@ vehiculos_bp = Blueprint('vehiculos', __name__)
 PER_PAGE = 20
 
 
+TRANSMISIONES = ["Manual", "Automático", "Doble Embrague", "CVT"]
+
+
 @vehiculos_bp.app_context_processor
 def catalogos():
-    # disponibles en todas las plantillas para pintar selects y etiquetas
-    return {"MOTORES": MOTORES, "ESTADOS": ESTADOS}
+    # disponibles en todas las plantillas para pintar selects, etiquetas y el pie de página
+    return {"MOTORES": MOTORES, "ESTADOS": ESTADOS, "TRANSMISIONES": TRANSMISIONES,
+            "anio_actual": datetime.now().year}
+
+
+def _valores_formulario(vehiculo=None, form=None):
+    """Valores (texto) con los que se pinta el formulario de alta/edición.
+    Si hay un formulario enviado manda lo escrito; si no, los datos del vehículo."""
+    form = form or {}
+    if vehiculo is None:
+        base = {"motor": "G", "estado": "D", "transmision": "Manual",
+                "fEntrada": datetime.now().strftime('%Y-%m-%d')}
+    else:
+        def txt(valor):
+            return "" if valor is None else valor
+        base = {
+            "marca": vehiculo.marca, "modelo": vehiculo.modelo, "vin": vehiculo.vin,
+            "kilometros": vehiculo.kilometros, "anio": vehiculo.anio.strftime('%Y-%m-%d'),
+            "fEntrada": vehiculo.fecha_entrada.strftime('%Y-%m-%d'),
+            "motor": vehiculo.motor, "cilindrada": txt(vehiculo.cilindrada),
+            "consumo": vehiculo.consumo, "potencia": vehiculo.potencia,
+            "transmision": vehiculo.transmision or "", "marchas": txt(vehiculo.marchas),
+            "pCompra": vehiculo.precio_compra, "pVenta": vehiculo.precio_venta,
+            "estado": vehiculo.estado,
+        }
+    return {**base, **form.to_dict()} if hasattr(form, "to_dict") else {**base, **form}
 
 
 def _numero(valor, tipo, etiqueta, obligatorio=False):
@@ -130,10 +157,9 @@ def new_vehicle():
             flash("Vehículo registrado correctamente.", "success")
             return redirect(url_for('vehiculos.index'))
         # algo ha fallado: se vuelve a mostrar el formulario con lo que se había escrito
-        return render_template('newVehicle.html', form=request.form)
+        return render_template('newVehicle.html', valores=_valores_formulario(form=request.form))
 
-    return render_template('newVehicle.html', form={},
-                           today_date=datetime.now().strftime('%Y-%m-%d'))
+    return render_template('newVehicle.html', valores=_valores_formulario())
 
 
 @vehiculos_bp.route('/vehiculos/eliminar/<int:id>', methods=["GET", "POST"])
@@ -170,11 +196,13 @@ def modificar_vehiculo(id):
                 abort(404)
         except ValueError as e:
             flash(str(e), "danger")
-            return render_template('modifyVehicle.html', vehiculo=vehiculo, form=request.form)
+            return render_template('modifyVehicle.html', vehiculo=vehiculo,
+                                   valores=_valores_formulario(vehiculo, request.form))
         flash("Cambios guardados.", "success")
         return redirect(url_for('vehiculos.vehiculo_id', id=id))
 
-    return render_template('modifyVehicle.html', vehiculo=vehiculo, form={})
+    return render_template('modifyVehicle.html', vehiculo=vehiculo,
+                           valores=_valores_formulario(vehiculo))
 
 
 @vehiculos_bp.route('/vehiculos/auditoria')
